@@ -27,5 +27,5 @@ public enum ReserveStatus
 public enum PaymentType
 {
     Cash,
-    Credit
+    CreditCard
 }
