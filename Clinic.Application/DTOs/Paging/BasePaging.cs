@@ -2,15 +2,15 @@
 
 public class BasePaging
 {
-    public int PageId { get; set; }
+    public int PageId { get; set; } = 1;
     public int PageCount { get; set; }
     public int AllEntitiesCount { get; set; }
     public int StartPage { get; set; }
     public int EndPage { get; set; }
-    public int TakeEntity { get; set; }
+    public int TakeEntity { get; set; } = 12;
     public int SkipEntity { get; set; }
-    public int BeforeAndAfterCount { get; set; }
-    
+    public int BeforeAndAfterCount { get; set; } = 3;
+
     public int GetLastPage()
     {
         return (int)Math.Ceiling(AllEntitiesCount / (double)TakeEntity);

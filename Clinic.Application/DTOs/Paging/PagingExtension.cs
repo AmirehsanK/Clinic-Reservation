@@ -1,6 +1,9 @@
 ﻿namespace Clinic.Application.DTOs.Paging;
 
-public class PagingExtension
+public static class PagingExtension
 {
-    
+    public static IQueryable<T> ApplyPaging<T>(this IQueryable<T> query, BasePaging paging)
+    {
+        return query.Skip(paging.SkipEntity).Take(paging.TakeEntity);
+    }
 }
