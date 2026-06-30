@@ -1,58 +1,81 @@
-﻿using Clinic.Data.Entities;
+﻿using Clinic.Data.Context;
+using Clinic.Data.Entities;
 using Clinic.Data.Repositories.Interface;
+using Microsoft.EntityFrameworkCore;
 
 namespace Clinic.Data.Repositories.Implementation;
 
-public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEntity : BaseEntity
+public class GenericRepository<TEntity> (AppDbContext context,DbSet<TEntity> dbSet): IGenericRepository<TEntity> where TEntity : BaseEntity
 {
     
-
-    public Task<TEntity> GetEntityById(int id)
+    public async Task<TEntity> GetEntityById(int id)
     {
-        throw new NotImplementedException();
+        return await GetAllEntities().SingleAsync(d => d.Id == id);
     }
 
     public IQueryable<TEntity> GetAllEntities()
     {
-        throw new NotImplementedException();
+        return dbSet.AsQueryable();
     }
 
-    public Task Create(TEntity entity)
+    public async Task Create(TEntity entity)
     {
-        throw new NotImplementedException();
+        entity.CreateDate = DateTime.Now;
+        entity.LastUpdateDate = DateTime.Now;
+        await dbSet.AddAsync(entity);
     }
 
-    public Task CreateRangeEntities(List<TEntity> entities)
+    public async Task CreateRangeEntities(List<TEntity> entities)
     {
-        throw new NotImplementedException();
+        var list = new List<TEntity>();
+        foreach (var item in entities)
+        {
+            item.CreateDate = DateTime.Now;
+            item.LastUpdateDate = DateTime.Now;
+            list.Add(item);
+        }
+        await dbSet.AddRangeAsync(list);
     }
 
-    public Task Delete(TEntity entity)
+    public async Task Delete(int id)
     {
-        throw new NotImplementedException();
+        var data = await GetEntityById(id);
+        data.IsDeleted = true;
+        Update(data);
     }
 
-    public Task DeleteRange(List<TEntity> entities)
+    public void DeleteRange(List<TEntity> entities)
     {
-        throw new NotImplementedException();
+        var list = new List<TEntity>();
+        foreach (var item in entities)
+        {
+            item.IsDeleted = true;
+            item.LastUpdateDate = DateTime.Now;
+            list.Add(item);
+        }
+        dbSet.UpdateRange(list);
     }
 
     public void Update(TEntity entity)
     {
-        throw new NotImplementedException();
+        entity.LastUpdateDate = DateTime.Now;
+        dbSet.Update(entity);
     }
 
-    public void DeletePermanently(int id)
+    public async Task DeletePermanently(int id)
     {
-        throw new NotImplementedException();
+        var data = await GetEntityById(id);
+        dbSet.Remove(data);
     }
 
-    public Task SaveChanges()
+    public async Task SaveChanges()
     {
-        throw new NotImplementedException();
+        await context.SaveChangesAsync();
     }
+
     public ValueTask DisposeAsync()
     {
-        throw new NotImplementedException();
+        return context.DisposeAsync();
     }
+
 }

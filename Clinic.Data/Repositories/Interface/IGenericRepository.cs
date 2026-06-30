@@ -12,13 +12,13 @@ public interface IGenericRepository<TEntity> : IAsyncDisposable where TEntity : 
     
     Task CreateRangeEntities(List<TEntity> entities);
     
-    Task Delete(TEntity entity);
+    Task Delete(int id);
     
-    Task DeleteRange(List<TEntity> entities);
+    void DeleteRange(List<TEntity> entities);
     
     void Update(TEntity entity);
     
-    void DeletePermanently(int id);
+    Task DeletePermanently(int id);
     
     Task SaveChanges();
 }
