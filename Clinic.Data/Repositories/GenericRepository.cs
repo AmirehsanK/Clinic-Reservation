@@ -1,9 +1,8 @@
 ﻿using Clinic.Data.Context;
 using Clinic.Data.Entities;
-using Clinic.Data.Repositories.Interface;
 using Microsoft.EntityFrameworkCore;
 
-namespace Clinic.Data.Repositories.Implementation;
+namespace Clinic.Data.Repositories;
 
 public class GenericRepository<TEntity> (AppDbContext context,DbSet<TEntity> dbSet): IGenericRepository<TEntity> where TEntity : BaseEntity
 {

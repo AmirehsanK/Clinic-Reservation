@@ -1,6 +1,6 @@
 ﻿using Clinic.Data.Entities;
 
-namespace Clinic.Data.Repositories.Interface;
+namespace Clinic.Data.Repositories;
 
 public interface IGenericRepository<TEntity> : IAsyncDisposable where TEntity : BaseEntity
 {
