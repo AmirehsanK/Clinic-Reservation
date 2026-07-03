@@ -1,4 +1,5 @@
 ﻿using Clinic.Application.DTOs.Common;
+using Clinic.Application.DTOs.Paging;
 using Clinic.Application.DTOs.Patients;
 using Clinic.Application.DTOs.Users;
 using Clinic.Application.Services.Interfaces;
@@ -130,8 +131,44 @@ public class UserService : IUserService
 
     public async Task<FilterPatientsDto> GetPatientsList(FilterPatientsDto filterPatientsDto)
     {
-        throw new NotImplementedException();
-    }
+        var query = _patientRepository.GetAllEntities().OrderByDescending(p => p.CreateDate).AsQueryable();
+
+        switch (filterPatientsDto.Gender)
+        {
+            case FilterGender.All:
+                break;
+            case FilterGender.Male:
+                query = query.Where(p => p.Gender == Gender.Male);
+                break;
+            case FilterGender.Female:
+                query = query.Where(p => p.Gender == Gender.Female);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+        if(!string.IsNullOrEmpty(filterPatientsDto.FullName))
+            query = query.Where(p => EF.Functions.Like(p.FullName.Trim(), $"%{filterPatientsDto.FullName}%"));
+        if (!string.IsNullOrEmpty(filterPatientsDto.Mobile))
+            query = query.Where(p => EF.Functions.Like(p.Mobile.Trim(), $"%{filterPatientsDto.Mobile}%"));
+        if(!string.IsNullOrEmpty(filterPatientsDto.NationalId))
+            query = query.Where(p => EF.Functions.Like(p.NationalId.Trim(), $"%{filterPatientsDto.NationalId}%"));
+        if(!string.IsNullOrEmpty(filterPatientsDto.Description))
+            query = query.Where(p => EF.Functions.Like(p.Description.Trim(), $"%{filterPatientsDto.Description}%"));
+        if (filterPatientsDto.Age > 0)
+        {
+            query = query.Where(p => p.Age == filterPatientsDto.Age);
+        }
+
+        #region Paging
+
+        var pager = Pager.Build(filterPatientsDto.PageId, await query.CountAsync(), filterPatientsDto.TakeEntity,
+            filterPatientsDto.BeforeAndAfterCount);
+        var allEntities = await query.Paging(pager).ToListAsync();
+
+        #endregion
+        
+        return filterPatientsDto.SetData(allEntities).SetPaging(pager);
+    }   
 
     public async Task<BaseResponse> CreatePatient(CreatePatientDto createPatientDto)
     {

@@ -8,7 +8,7 @@ public class FilterPatientsDto : BasePaging
     public string FullName { get; set; }
     public string Mobile { get; set; }
     public string NationalId { get; set; }
-    public int Age { get; set; }
+    public int? Age { get; set; }
     public FilterGender Gender { get; set; }
     public string? Description { get; set; }
     
