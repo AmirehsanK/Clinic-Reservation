@@ -14,8 +14,9 @@ public class UserService : IUserService
 
     private readonly IGenericRepository<User> _userRepository;
     private readonly IGenericRepository<Patient> _patientRepository;
+    private readonly IGenericRepository<ReserveRecord> _reserveRecordRepository;
 
-    public UserService(IGenericRepository<User> userRepository, IGenericRepository<Patient> patientRepository)
+    public UserService(IGenericRepository<User> userRepository, IGenericRepository<Patient> patientRepository, IGenericRepository<ReserveRecord> reserveRecordRepository)
     {
         _userRepository = userRepository;
         _patientRepository = patientRepository;
@@ -134,38 +135,165 @@ public class UserService : IUserService
 
     public async Task<BaseResponse> CreatePatient(CreatePatientDto createPatientDto)
     {
-        throw new NotImplementedException();
+        #region Validation
+        
+        var error= new List<string>();
+        var patient = await _patientRepository.GetAllEntities().FirstOrDefaultAsync(p => p.Mobile == createPatientDto.Mobile || p.NationalId == createPatientDto.NationalId);
+        if (patient != null)
+        {
+            if(patient.NationalId == createPatientDto.NationalId)
+                error.Add($"بیمار با نام {createPatientDto.FullName} با کد ملی {createPatientDto.NationalId} قبلا ثبت شده است");
+            if(patient.Mobile == createPatientDto.Mobile)
+                error.Add($"بیمار با نام {createPatientDto.FullName} با موبایل {createPatientDto.Mobile} قبلا ثبت شده است");
+            return new BaseResponse()
+            {
+                IsSuccess = false,
+                Message = "عملیات با خطا مواجه شد",
+                Items = error
+            };
+        }
+        
+        #endregion
+        
+        var newPatient = new Patient()
+        {
+            FullName = createPatientDto.FullName,
+            Mobile = createPatientDto.Mobile,
+            Age = createPatientDto.Age,
+            NationalId = createPatientDto.NationalId
+        };
+        await _patientRepository.Create(newPatient);
+        await _patientRepository.SaveChanges();
+        return new BaseResponse()
+        {
+            IsSuccess = true,
+            Id = newPatient.Id,
+            Message = "عملیات با موفقیت انجام شد"
+        };
     }
 
     public async Task<BaseResponse> CreateGroupPatients(List<CreateGroupPatientsDto> createGroupPatientsDto)
     {
-        throw new NotImplementedException();
+        var patients = new List<Patient>();
+        var errors = new List<string>();
+        foreach (var item in createGroupPatientsDto)
+        {
+            var dupMobile = await _patientRepository.GetAllEntities().AnyAsync(p => p.Mobile == item.Mobile);
+            if (dupMobile)
+            {
+                errors.Add($"بیمار با نام {item.FullName} با موبایل {item.Mobile} قبلا ثبت شده است");
+                continue;
+            }
+            var dupNationalId = await _patientRepository.GetAllEntities().AnyAsync(p => p.NationalId == item.NationalId);
+            if (dupNationalId)
+            {
+                errors.Add($"بیمار با نام {item.FullName} با کد ملی {item.NationalId} قبلا ثبت شده است");
+                continue;
+            }
+
+            var patient = new Patient()
+            {
+                FullName = item.FullName,
+                Mobile = item.Mobile,
+                Age = item.Age,
+                NationalId = item.NationalId,
+                Gender = item.Gender
+            };
+            patients.Add(patient);
+        }
+        await _patientRepository.CreateRangeEntities(patients);
+        await _patientRepository.SaveChanges();
+        return new BaseResponse()
+        {
+            IsSuccess = true,
+            Message = "عملیات با موفقیت انجام شد",
+            Items = errors
+        };
     }
 
     public async Task<PatientDetailsDto> GetPatientDetails(int id)
     {
-        throw new NotImplementedException();
+        var detail = await _patientRepository.GetEntityById(id);
+        return new PatientDetailsDto()
+        {
+            Id = detail.Id,
+            FullName = detail.FullName,
+            Mobile = detail.Mobile,
+            Age = detail.Age,
+            NationalId = detail.NationalId,
+            Gender = detail.Gender,
+            CreateDate = detail.CreateDate,
+            LastUpdateDate = detail.LastUpdateDate,
+            Description = detail.Description,
+            ReserveRecords = await _reserveRecordRepository.GetAllEntities().Where(r => r.PatientId== id).ToListAsync()
+        };
     }
 
     public async Task<UpdatePatientDto> GetPatientForUpdate(int id)
     {
-        throw new NotImplementedException();
+        var patient = await _patientRepository.GetEntityById(id);
+        return new UpdatePatientDto()
+        {
+            Id = patient.Id,
+            FullName = patient.FullName,
+            Mobile = patient.Mobile,
+            Age = patient.Age,
+            NationalId = patient.NationalId,
+            Gender = patient.Gender
+        };
     }
 
     public async Task<BaseResponse> UpdatePatient(UpdatePatientDto updatePatientDto)
     {
-        throw new NotImplementedException();
+        #region Validation
+        
+        var error= new List<string>();
+        var patient = await _patientRepository.GetAllEntities().FirstOrDefaultAsync(p => p.Id != updatePatientDto.Id && (p.Mobile == updatePatientDto.Mobile || p.NationalId == updatePatientDto.NationalId));
+        if (patient != null)
+        {
+            if(patient.NationalId == updatePatientDto.NationalId)
+                error.Add($"بیمار با نام {updatePatientDto.FullName} با کد ملی {updatePatientDto.NationalId} قبلا ثبت شده است");
+            if(patient.Mobile == updatePatientDto.Mobile)
+                error.Add($"بیمار با نام {updatePatientDto.FullName} با موبایل {updatePatientDto.Mobile} قبلا ثبت شده است");
+            return new BaseResponse()
+            {
+                IsSuccess = false,
+                Message = "عملیات با خطا مواجه شد",
+                Items = error
+            };
+        }
+        
+        #endregion
+        
+        var data = await _patientRepository.GetEntityById(updatePatientDto.Id);
+        data.FullName = updatePatientDto.FullName;
+        data.Mobile = updatePatientDto.Mobile;
+        data.Age = updatePatientDto.Age;
+        data.NationalId = updatePatientDto.NationalId;
+        data.Gender = updatePatientDto.Gender;
+        
+        _patientRepository.Update(data);
+        await _patientRepository.SaveChanges();
+        return new BaseResponse()
+        {
+            Id = data.Id,
+            IsSuccess = true,
+            Message = "عملیات با موفقیت انجام شد"
+        };
     }
 
     public async Task<BaseResponse> DeletePatient(int id)
     {
-        throw new NotImplementedException();
+        await _patientRepository.Delete(id);
+        await _patientRepository.SaveChanges();
+        return new BaseResponse()
+        {
+            IsSuccess = true,
+            Message = "بیمار با موفقیت حذف شد"
+        };
     }
 
     #endregion
-    
-
-    
 
     #region Dispose
 
@@ -173,6 +301,7 @@ public class UserService : IUserService
     {
         await _userRepository.DisposeAsync();
         await _patientRepository.DisposeAsync();
+        await _reserveRecordRepository.DisposeAsync();
     }
 
     #endregion
