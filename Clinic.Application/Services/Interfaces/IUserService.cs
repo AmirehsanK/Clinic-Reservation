@@ -8,7 +8,7 @@ public interface IUserService : IAsyncDisposable
 {
     #region Users
 
-    Task<UsersListDto> GetUsersList();
+    Task<List<UserDetailsDto>> GetUsersList();
     Task<UserDetailsDto> GetUserDetails(int id);
     Task<UpdateUserDto> GetUserForUpdate(int id);
     Task<BaseResponse> CreateUsers(CreateUserDto createUsersDto);
