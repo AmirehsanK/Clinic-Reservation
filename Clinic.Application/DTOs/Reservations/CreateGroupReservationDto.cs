@@ -2,10 +2,9 @@
 
 public class CreateGroupReservationDto
 {
-    public List<DayOfWeek> DayOfWeeks { get; set; }
-    public int StartTime { get; set; }
-    public int EndTime { get; set; }
+    public int Year { get; set; }
+    public int Month { get; set; } 
+    public List<DayOfWeek> VisitDays { get; set; }
+    public List<TimeSpan> VisitTimes { get; set; }
     public int VisitDuration { get; set; }
-    public DateTime StartDate { get; set; }
-    public DateTime EndDate { get; set; }
-}
+}  

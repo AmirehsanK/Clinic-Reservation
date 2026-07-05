@@ -6,9 +6,9 @@ namespace Clinic.Application.DTOs.Reservations;
 
 public class FilterReservationsDto : BasePaging
 {
-    public DateTime ReserveTime { get; set; }
-    public DateTime EndReserveTime { get; set; }
-    public FilterReservationStatus Reserved { get; set; }    
+    public DateTime? ReserveTime { get; set; }
+    public DateTime? EndReserveTime { get; set; }
+    public FilterReservationStatus FilterReservationStatus { get; set; }    
     
     public List<Reservation> Data { get; set; }
 
