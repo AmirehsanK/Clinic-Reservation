@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Clinic.Application.Services.Implementation;
 
-public class ReservationService(IGenericRepository<Reservation> reservationRepository) : IReservationService
+public class ReservationService(IGenericRepository<Reservation> reservationRepository,IGenericRepository<ReserveRecord> recordRepository) : IReservationService
 {
     
     public async Task<FilterReservationsDto> FilterReservations(FilterReservationsDto filter)
@@ -96,29 +96,103 @@ public class ReservationService(IGenericRepository<Reservation> reservationRepos
 
     public async Task<BaseResponse> CreateReservation(CreateReservationDto createReservation)
     {
-        throw new NotImplementedException();
-    }
+        #region Validation
 
-    public async Task<BaseResponse> DeleteReservation(int reservationId)
-    {
-        throw new NotImplementedException();
-    }
+        var isAvailable = await reservationRepository.GetAllEntities()
+            .AnyAsync(p => p.ReserveTime < createReservation.EndReserveTime && p.EndReserveTime > createReservation.ReserveTime);
+        
+        if (isAvailable)
+        {
+            return new BaseResponse()
+            {
+                IsSuccess = false,
+                Message = "تاریخ انتخاب شده رزرو شده است.",
+            };
+        }
 
+        #endregion
+
+        var reservation = new Reservation
+        {
+            ReserveTime = createReservation.ReserveTime,
+            Reserved = false,
+            EndReserveTime = createReservation.EndReserveTime
+        };
+        await reservationRepository.Create(reservation);
+        await reservationRepository.SaveChanges();
+        return new BaseResponse()
+        {
+            IsSuccess = true,
+            Message = "عملیات با موفقیت انجام شد.",
+        };
+    }
+    
     public async Task ReserveReservation(int reservationId)
     {
-        throw new NotImplementedException();
+        var data = await reservationRepository.GetEntityById(reservationId);
+        data.Reserved = true;
+        reservationRepository.Update(data);
+        await reservationRepository.SaveChanges();
     }
-
     public async Task CancelReservation(int reservationId)
     {
-        throw new NotImplementedException();
+        var data = await reservationRepository.GetEntityById(reservationId);
+        data.Reserved = false;
+        reservationRepository.Update(data);
+        await reservationRepository.SaveChanges();
     }
+    public async Task<BaseResponse> DeleteReservation(int reservationId)
+    {
+        #region Validation
 
+        var usage = await recordRepository.GetAllEntities()
+            .AnyAsync(p => p.ReservationId == reservationId);
+        if (usage)
+        {
+            return new BaseResponse()
+            {
+                IsSuccess = false,
+                Message = "رزرو مورد نظر در سوابق استفاده شده است و قابل حذف نمی باشد.",
+            };
+        }
+
+        #endregion
+        await reservationRepository.Delete(reservationId);
+        await reservationRepository.SaveChanges();
+        return new BaseResponse()
+        {
+            IsSuccess = true,
+            Message = "عملیات با موفقیت انجام شد.",
+        };
+    }
+    public async Task<BaseResponse> DeleteGroupReservation(List<int> reservationIds)
+    {
+        var errors = new List<string>();
+        foreach (var reservationId in reservationIds)
+        {
+            var usage = await recordRepository.GetAllEntities()
+                .AnyAsync(p => p.ReservationId == reservationId);
+            if (usage)
+            {
+                errors.Add($"رزرو با شناسه {reservationId} در سوابق استفاده شده است و قابل حذف نمی باشد.");
+                continue;
+            }
+            await reservationRepository.Delete(reservationId);
+        }
+        await reservationRepository.SaveChanges();
+        return new BaseResponse()
+        {
+            IsSuccess = true,
+            Message = "عملیات با موفقیت انجام شد.",
+            Items = errors
+        };
+    }
+    
     #region Dispose
 
     public async ValueTask DisposeAsync()
     {
-        throw new NotImplementedException();
+        
     }
 
     #endregion
