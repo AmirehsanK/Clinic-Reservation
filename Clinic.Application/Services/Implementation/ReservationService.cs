@@ -192,7 +192,8 @@ public class ReservationService(IGenericRepository<Reservation> reservationRepos
 
     public async ValueTask DisposeAsync()
     {
-        
+        await reservationRepository.DisposeAsync();
+        await recordRepository.DisposeAsync();
     }
 
     #endregion
