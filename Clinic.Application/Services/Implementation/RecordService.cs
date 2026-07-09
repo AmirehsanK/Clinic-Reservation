@@ -1,6 +1,8 @@
-﻿namespace Clinic.Application.Services.Implementation;
+﻿using Clinic.Application.Services.Interfaces;
 
-public class RecordService
+namespace Clinic.Application.Services.Implementation;
+
+public class RecordService : IRecordService
 {
     
 }

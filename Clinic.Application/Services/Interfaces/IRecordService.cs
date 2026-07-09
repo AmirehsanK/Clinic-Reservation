@@ -1,6 +1,6 @@
 ﻿namespace Clinic.Application.Services.Interfaces;
 
-public interface IRecordService
+public interface IRecordService : IAsyncDisposable
 {
     
 }
