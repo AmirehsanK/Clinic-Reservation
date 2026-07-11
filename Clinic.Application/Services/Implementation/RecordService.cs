@@ -6,10 +6,7 @@ namespace Clinic.Application.Services.Implementation;
 
 public class RecordService : IRecordService
 {
-    public async ValueTask DisposeAsync()
-    {
-        throw new NotImplementedException();
-    }
+    
 
     public async Task<FilterRecordsDto> FilterRecords(FilterRecordsDto filter)
     {
@@ -35,4 +32,13 @@ public class RecordService : IRecordService
     {
         throw new NotImplementedException();
     }
+
+    #region Dispose
+
+    public async ValueTask DisposeAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    #endregion
 }
