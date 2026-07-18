@@ -10,5 +10,5 @@ public interface IRecordService : IAsyncDisposable
     Task<BaseResponse> CreateRecord(ReserveTimeDto dto);
     Task<EditRecordDto> GetUpdateRecord(int id);
     Task<BaseResponse> UpdateRecord(EditRecordDto dto);
-    
+    Task<BaseResponse> DeleteRecord(int id);
 }
