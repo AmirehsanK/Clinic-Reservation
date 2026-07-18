@@ -33,6 +33,11 @@ public class RecordService : IRecordService
         throw new NotImplementedException();
     }
 
+    public async Task<BaseResponse> DeleteRecord(int id)
+    {
+        throw new NotImplementedException();
+    }
+
     #region Dispose
 
     public async ValueTask DisposeAsync()
