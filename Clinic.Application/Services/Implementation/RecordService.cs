@@ -6,7 +6,6 @@ namespace Clinic.Application.Services.Implementation;
 
 public class RecordService : IRecordService
 {
-    
 
     public async Task<FilterRecordsDto> FilterRecords(FilterRecordsDto filter)
     {
