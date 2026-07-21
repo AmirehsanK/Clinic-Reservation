@@ -143,6 +143,9 @@ public class UserService : IUserService
             case FilterGender.Female:
                 query = query.Where(p => p.Gender == Gender.Female);
                 break;
+            case FilterGender.NotSpecified:
+                query = query.Where(p => p.Gender == Gender.NotSpecified);
+                break;
             default:
                 throw new ArgumentOutOfRangeException();
         }

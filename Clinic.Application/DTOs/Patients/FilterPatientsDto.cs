@@ -39,5 +39,6 @@ public enum FilterGender
 {
     All,
     Male,
-    Female
+    Female,
+    NotSpecified
 }

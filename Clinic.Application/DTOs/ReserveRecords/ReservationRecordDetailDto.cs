@@ -12,7 +12,7 @@ public class ReservationRecordDetailDto
     public string? Description { get; set; }
     public ReserveStatus Status { get; set; }
     public PaymentType PaymentType { get; set; }
-    public int PaidPrice { get; set; }
+    public int? PaidPrice { get; set; }
     
     public Reservation Reservation { get; set; }
     public Patient Patient { get; set; }
