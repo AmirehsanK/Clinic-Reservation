@@ -165,17 +165,43 @@ public class RecordService : IRecordService
 
     public async Task<EditRecordDto> GetUpdateRecord(int id)
     {
-        throw new NotImplementedException();
+        var data = await _recordRepository.GetEntityById(id);
+        return new EditRecordDto
+        {
+            Id = data.Id,
+            Description = data.Description,
+            Status = data.Status,
+            PaidPrice = data.PaidPrice,
+            PaymentType = data.PaymentType
+        };
     }
 
     public async Task<BaseResponse> UpdateRecord(EditRecordDto dto)
     {
-        throw new NotImplementedException();
+        var data = await _recordRepository.GetEntityById(dto.Id);
+        data.PaymentType = dto.PaymentType;
+        data.PaidPrice=dto.PaidPrice;
+        data.Description=dto.Description;
+        data.Status=dto.Status;
+        
+        _recordRepository.Update(data);
+        await _recordRepository.SaveChanges();
+        return new BaseResponse
+        {
+            IsSuccess = true,
+            Message = "رکورد با موفقیت به روزرسانی شد."
+        };
     }
 
     public async Task<BaseResponse> DeleteRecord(int id)
     {
-        throw new NotImplementedException();
+        await _recordRepository.Delete(id);
+        await _recordRepository.SaveChanges();
+        return new BaseResponse
+        {
+            IsSuccess = true,
+            Message = "رکورد با موفقیت حذف شد."
+        };
     }
 
     #region Dispose
