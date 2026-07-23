@@ -11,7 +11,7 @@ public interface IUserService : IAsyncDisposable
     Task<List<UserDetailsDto>> GetUsersList();
     Task<UserDetailsDto> GetUserDetails(int id);
     Task<UpdateUserDto> GetUserForUpdate(int id);
-    Task<BaseResponse> CreateUsers(CreateUserDto createUsersDto);
+    Task<BaseResponse> CreateUser(CreateUserDto createUsersDto);
     Task<BaseResponse> UpdateUser(UpdateUserDto updateUsersDto);
     Task <BaseResponse> DeleteUser(int id);
     

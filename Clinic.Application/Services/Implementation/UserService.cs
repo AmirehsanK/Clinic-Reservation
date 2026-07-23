@@ -64,7 +64,7 @@ public class UserService : IUserService
         };
     }
 
-    public async Task<BaseResponse> CreateUsers(CreateUserDto createUsersDto)
+    public async Task<BaseResponse> CreateUser(CreateUserDto createUsersDto)
     {
         var dupMobile = await _userRepository.GetAllEntities().AnyAsync(u => u.Mobile == createUsersDto.Mobile);
         if (dupMobile)
