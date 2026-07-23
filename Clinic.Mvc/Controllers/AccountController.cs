@@ -8,8 +8,7 @@ namespace Clinic.Mvc.Controllers;
 public class AccountController(IUserService userService,ICaptchaValidator captchaValidator) : BaseController
 {
     #region Login
-
-    // GET
+    
     [HttpGet]
     public IActionResult Login()
     {
@@ -24,27 +23,5 @@ public class AccountController(IUserService userService,ICaptchaValidator captch
     }
     
     #endregion
-    #region Create User
-
-    // GET
-    [HttpGet]
-    public IActionResult CreateUser()
-    {
-        return View();
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> CreateUser(CreateUserDto dto)
-    {
-        var res= await userService.CreateUser(dto);
-        if(res.IsSuccess)
-        {
-            TempData[SuccessMessage] = res.Message;
-            return RedirectToAction("Login");
-        }
-        
-        return View();
-    }
     
-    #endregion
 }
