@@ -6,6 +6,14 @@ namespace Clinic.Application.Services.Interfaces;
 
 public interface IUserService : IAsyncDisposable
 {
+    #region Autentication
+
+    void ResendOtp(string mobile);
+    Task<BaseResponse> CheckOtp(AuthenticationDto dto);
+    Task<BaseResponse> Login(UserLoginDto dto);
+
+    #endregion
+    
     #region Users
 
     Task<List<UserDetailsDto>> GetUsersList();

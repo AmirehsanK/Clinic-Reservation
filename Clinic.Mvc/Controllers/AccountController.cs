@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Clinic.Mvc.Controllers;
 
-public class AccountController(IUserService userService,ICaptchaValidator captchaValidator) : BaseController
+public class AccountController(IUserService userService,ICaptchaValidator captchaValidator,IOtpService otpService) : BaseController
 {
     #region Login
     
@@ -39,7 +39,12 @@ public class AccountController(IUserService userService,ICaptchaValidator captch
     [HttpPost]
     public async Task<IActionResult> Authentication(AuthenticationDto dto)
     {
-        //Otp
+        var res = await userService.CheckOtp(dto);
+        if (!res.IsSuccess)
+        {
+            TempData[ErrorMessage] = res.Message;
+            return RedirectToAction("Login");
+        }
         return View();
     }
     
@@ -50,8 +55,12 @@ public class AccountController(IUserService userService,ICaptchaValidator captch
     [HttpPost("resend-otp")]
     public IActionResult ResendOTP(string mobile)
     {
-        //resend otp
-        return Ok();
+        if(!otpService.ResendOtp(mobile))
+        {
+            return Ok(new{message="Code already sent, Wait 2 minutes until try again."});
+        }
+        userService.ResendOtp(mobile);
+        return Ok(new{message="Code sent successfully."});
     }
 
     #endregion
