@@ -1,26 +1,26 @@
 ﻿using Clinic.Application.Services.Interfaces;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Clinic.Application.Services.Implementation;
 
-public class OtpService :IOtpService
+public class OtpService(IMemoryCache cache) :IOtpService
 {
-    public async ValueTask DisposeAsync()
-    {
-        throw new NotImplementedException();
-    }
-
+    
     public void GenerateOtp(string mobile)
     {
-        throw new NotImplementedException();
+        var otp = new Random().Next(100000, 999999).ToString();
+        cache.Set(mobile, otp,TimeSpan.FromMinutes(2));
+        
     }
 
     public bool ValidateOtp(string mobile, string otp)
     {
-        throw new NotImplementedException();
+        return cache.TryGetValue(mobile, out _);
     }
 
     public bool ResendOtp(string mobile)
     {
-        throw new NotImplementedException();
+        return !cache.TryGetValue(mobile, out string? cachedOtp) || cachedOtp == null;
     }
+    
 }
