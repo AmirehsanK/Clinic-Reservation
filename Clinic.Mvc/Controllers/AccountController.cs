@@ -1,7 +1,9 @@
-﻿using Clinic.Application.DTOs.Users;
+﻿using System.Security.Claims;
+using Clinic.Application.DTOs.Users;
 using Clinic.Application.Services.Interfaces;
 using GoogleReCaptcha.V3.Interface;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Clinic.Mvc.Controllers;
@@ -17,8 +19,25 @@ public class AccountController(IUserService userService,ICaptchaValidator captch
     }
 
     [HttpPost]
-    public IActionResult Login(UserLoginDto dto)
+    public async Task<IActionResult> Login(UserLoginDto dto)
     {
+        #region Validation
+
+        if (!ModelState.IsValid)
+        {
+            TempData[ErrorMessage] = "Invalid Inputs.";
+            return View(dto);
+        }
+
+        #endregion
+        
+        var res = await userService.Login(dto);
+        if (!res.IsSuccess)
+        {
+            TempData[ErrorMessage] = res.Message;
+            return View(dto);
+        }
+        TempData[SuccessMessage] = res.Message;
         return RedirectToAction("Authentication", new {mobile = dto.Mobile});
     }
     
@@ -39,13 +58,46 @@ public class AccountController(IUserService userService,ICaptchaValidator captch
     [HttpPost]
     public async Task<IActionResult> Authentication(AuthenticationDto dto)
     {
+        #region Validation
+
+        if (!ModelState.IsValid)
+        {
+            TempData[ErrorMessage] = "Invalid Inputs.";
+            return View(dto);
+        }
+
+        #endregion
+        
         var res = await userService.CheckOtp(dto);
         if (!res.IsSuccess)
         {
             TempData[ErrorMessage] = res.Message;
             return RedirectToAction("Login");
         }
-        return View();
+
+        #region Claims
+
+        var user = await userService.GetUserDetailsByMobile(dto.Mobile);
+        var claims = new List<Claim>()
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Name, user.FullName),
+            new Claim(ClaimTypes.MobilePhone, user.Mobile)
+        };
+        
+        var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+        var claimsProperties = new AuthenticationProperties
+        {
+            IsPersistent = true,
+            ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
+        };
+        await HttpContext.SignInAsync(claimsPrincipal,claimsProperties);
+
+        #endregion
+        
+        TempData[SuccessMessage] = res.Message;
+        return RedirectToAction("Dashboard","Home");
     }
     
     #endregion
@@ -53,7 +105,7 @@ public class AccountController(IUserService userService,ICaptchaValidator captch
     #region Resend OTP
 
     [HttpPost("resend-otp")]
-    public IActionResult ResendOTP(string mobile)
+    public IActionResult ResendOtp(string mobile)
     {
         if(!otpService.ResendOtp(mobile))
         {

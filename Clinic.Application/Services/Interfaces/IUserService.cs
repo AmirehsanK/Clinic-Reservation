@@ -17,7 +17,9 @@ public interface IUserService : IAsyncDisposable
     #region Users
 
     Task<List<UserDetailsDto>> GetUsersList();
-    Task<UserDetailsDto> GetUserDetails(int id);
+    Task<UserDetailsDto> GetUserDetailsById(int id);
+    Task<UserDetailsDto> GetUserDetailsByMobile(string mobile);
+    
     Task<UpdateUserDto> GetUserForUpdate(int id);
     Task<BaseResponse> CreateUser(CreateUserDto createUsersDto);
     Task<BaseResponse> UpdateUser(UpdateUserDto updateUsersDto);

@@ -45,9 +45,21 @@ public class UserService : IUserService
         return users;
     }
 
-    public async Task<UserDetailsDto> GetUserDetails(int id)
+    public async Task<UserDetailsDto> GetUserDetailsById(int id)
     {
         var user = await _userRepository.GetEntityById(id);
+        return new UserDetailsDto
+        {
+            Id = user.Id,
+            LastUpdateDate = user.LastUpdateDate,
+            CreateDate = user.CreateDate,
+            FullName = user.FullName,
+            Mobile = user.Mobile
+        };
+    }
+    public async Task<UserDetailsDto> GetUserDetailsByMobile(string mobile)
+    {
+        var user = await _userRepository.GetAllEntities().FirstAsync(u => u.Mobile == mobile);
         return new UserDetailsDto
         {
             Id = user.Id,
