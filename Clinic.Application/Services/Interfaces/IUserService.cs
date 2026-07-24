@@ -8,7 +8,7 @@ public interface IUserService : IAsyncDisposable
 {
     #region Autentication
 
-    void ResendOtp(string mobile);
+    Task ResendOtp(string mobile);
     Task<BaseResponse> CheckOtp(AuthenticationDto dto);
     Task<BaseResponse> Login(UserLoginDto dto);
 

@@ -16,11 +16,16 @@ public class UserService : IUserService
     private readonly IGenericRepository<User> _userRepository;
     private readonly IGenericRepository<Patient> _patientRepository;
     private readonly IGenericRepository<ReserveRecord> _reserveRecordRepository;
+    private readonly IOtpService _otpService;
+    private readonly ISmsService _smsService;
 
-    public UserService(IGenericRepository<User> userRepository, IGenericRepository<Patient> patientRepository, IGenericRepository<ReserveRecord> reserveRecordRepository)
+    public UserService(IGenericRepository<User> userRepository, IGenericRepository<Patient> patientRepository, IGenericRepository<ReserveRecord> reserveRecordRepository, IOtpService otpService, ISmsService smsService)
     {
         _userRepository = userRepository;
         _patientRepository = patientRepository;
+        _reserveRecordRepository = reserveRecordRepository;
+        _otpService = otpService;
+        _smsService = smsService;
     }
 
     #endregion
@@ -72,7 +77,7 @@ public class UserService : IUserService
             return new BaseResponse()
             {
                 IsSuccess = false,
-                Message = "کاربر با موبایل موردنظر قبلا ثبت شده است"
+                Message = "User with the Phone Number  already exists."
             };
         }
         var user = new User()
@@ -86,7 +91,7 @@ public class UserService : IUserService
         {
             Id = user.Id,
             IsSuccess = true,
-            Message = "کاربر با موفقیت ثبت شد"
+            Message = "User created successfully."
         };
     }
 
@@ -98,7 +103,7 @@ public class UserService : IUserService
             return new BaseResponse()
             {
                 IsSuccess = false,
-                Message = "کاربر با موبایل موردنظر قبلا ثبت شده است"
+                Message = "User with the Phone Number  already exists."
             };
         }
         var user = await _userRepository.GetEntityById(updateUsersDto.Id);
@@ -110,7 +115,7 @@ public class UserService : IUserService
         return new BaseResponse()
         {
             IsSuccess = true,
-            Message = "عملیات با موفقیت انجام شد"
+            Message = "Operation completed successfully."
         };
     }
 
@@ -121,7 +126,7 @@ public class UserService : IUserService
         return new BaseResponse()
         {
             IsSuccess = true,
-            Message = "کاربر با موفقیت حذف شد"
+            Message = "User deleted successfully."
         };
     }
 
@@ -182,13 +187,13 @@ public class UserService : IUserService
         if (patient != null)
         {
             if(patient.NationalId == createPatientDto.NationalId)
-                error.Add($"بیمار با نام {createPatientDto.FullName} با کد ملی {createPatientDto.NationalId} قبلا ثبت شده است");
+                error.Add($"Patient with name {createPatientDto.FullName} and national ID {createPatientDto.NationalId} already exists");
             if(patient.Mobile == createPatientDto.Mobile)
-                error.Add($"بیمار با نام {createPatientDto.FullName} با موبایل {createPatientDto.Mobile} قبلا ثبت شده است");
+                error.Add($"Patient with name {createPatientDto.FullName} and mobile {createPatientDto.Mobile} already exists");
             return new BaseResponse()
             {
                 IsSuccess = false,
-                Message = "عملیات با خطا مواجه شد",
+                Message = "Operation failed",
                 Items = error
             };
         }
@@ -208,7 +213,7 @@ public class UserService : IUserService
         {
             IsSuccess = true,
             Id = newPatient.Id,
-            Message = "عملیات با موفقیت انجام شد"
+            Message = "Operation completed successfully."
         };
     }
 
@@ -221,13 +226,13 @@ public class UserService : IUserService
             var dupMobile = await _patientRepository.GetAllEntities().AnyAsync(p => p.Mobile == item.Mobile);
             if (dupMobile)
             {
-                errors.Add($"بیمار با نام {item.FullName} با موبایل {item.Mobile} قبلا ثبت شده است");
+                errors.Add($"Patient with name {item.FullName} and mobile {item.Mobile} already exists");
                 continue;
             }
             var dupNationalId = await _patientRepository.GetAllEntities().AnyAsync(p => p.NationalId == item.NationalId);
             if (dupNationalId)
             {
-                errors.Add($"بیمار با نام {item.FullName} با کد ملی {item.NationalId} قبلا ثبت شده است");
+                errors.Add($"Patient with name {item.FullName} and national ID {item.NationalId} already exists");
                 continue;
             }
 
@@ -246,7 +251,7 @@ public class UserService : IUserService
         return new BaseResponse()
         {
             IsSuccess = true,
-            Message = "عملیات با موفقیت انجام شد",
+            Message = "Operation completed successfully.",
             Items = errors
         };
     }
@@ -292,13 +297,13 @@ public class UserService : IUserService
         if (patient != null)
         {
             if(patient.NationalId == updatePatientDto.NationalId)
-                error.Add($"بیمار با نام {updatePatientDto.FullName} با کد ملی {updatePatientDto.NationalId} قبلا ثبت شده است");
+                error.Add($"Patient with name {updatePatientDto.FullName} and national ID {updatePatientDto.NationalId} already exists");
             if(patient.Mobile == updatePatientDto.Mobile)
-                error.Add($"بیمار با نام {updatePatientDto.FullName} با موبایل {updatePatientDto.Mobile} قبلا ثبت شده است");
+                error.Add($"Patient with name {updatePatientDto.FullName} and mobile {updatePatientDto.Mobile} already exists");
             return new BaseResponse()
             {
                 IsSuccess = false,
-                Message = "عملیات با خطا مواجه شد",
+                Message = "Operation failed",
                 Items = error
             };
         }
@@ -318,7 +323,7 @@ public class UserService : IUserService
         {
             Id = data.Id,
             IsSuccess = true,
-            Message = "عملیات با موفقیت انجام شد"
+            Message = "Operation completed successfully."
         };
     }
 
@@ -329,7 +334,68 @@ public class UserService : IUserService
         return new BaseResponse()
         {
             IsSuccess = true,
-            Message = "بیمار با موفقیت حذف شد"
+            Message = "Patient deleted successfully."
+        };
+    }
+
+    #endregion
+
+    #region Authentication
+
+    public async Task ResendOtp(string mobile)
+    {
+        var otp = _otpService.GenerateOtp(mobile);
+        await _smsService.SendOtp(mobile, otp);
+    }
+
+    public async Task<BaseResponse> CheckOtp(AuthenticationDto dto)
+    {
+        var user =  await _userRepository.GetAllEntities().FirstOrDefaultAsync(u => u.Mobile == dto.Mobile);
+        if (user==null)
+            return new BaseResponse
+            {
+                IsSuccess = false,
+                Message = "Mobile Number not found."
+            };
+        var result = _otpService.ValidateOtp(dto.Mobile, dto.OtpCode);
+        if (result)
+        {
+            return new BaseResponse
+            {
+                IsSuccess = true,
+                Message = "Login successful."
+            };
+        }
+        
+        return new BaseResponse
+            {
+                IsSuccess = false,
+                Message = "Invalid OTP."
+            };
+    }
+
+    public async Task<BaseResponse> Login(UserLoginDto dto)
+    {
+        var numberExist = await _userRepository.GetAllEntities().AnyAsync(u => u.Mobile == dto.Mobile);
+        if (!numberExist)
+            return new BaseResponse
+            {
+                IsSuccess = false,
+                Message = "Mobile Number not found."
+            };
+        var otpSent = _otpService.ResendOtp(dto.Mobile);
+        if (!otpSent)
+            return new BaseResponse
+            {
+                IsSuccess = false,
+                Message = "Wait 2 minutes before requesting a new OTP."
+            };
+        var otp = _otpService.GenerateOtp(dto.Mobile);
+        await _smsService.SendOtp(dto.Mobile, $"Your OTP code is: {otp}");
+        return new BaseResponse
+        {
+            IsSuccess = true,
+            Message = "OTP sent successfully."
         };
     }
 
@@ -342,6 +408,7 @@ public class UserService : IUserService
         await _userRepository.DisposeAsync();
         await _patientRepository.DisposeAsync();
         await _reserveRecordRepository.DisposeAsync();
+        await _smsService.DisposeAsync();
     }
 
     #endregion

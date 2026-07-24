@@ -6,11 +6,11 @@ namespace Clinic.Application.Services.Implementation;
 public class OtpService(IMemoryCache cache) :IOtpService
 {
     
-    public void GenerateOtp(string mobile)
+    public string GenerateOtp(string mobile)
     {
         var otp = new Random().Next(100000, 999999).ToString();
         cache.Set(mobile, otp,TimeSpan.FromMinutes(2));
-        
+        return otp;
     }
 
     public bool ValidateOtp(string mobile, string otp)

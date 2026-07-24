@@ -2,7 +2,7 @@
 
 public interface IOtpService
 {
-    void GenerateOtp(string mobile);
+    string GenerateOtp(string mobile);
     bool ValidateOtp(string mobile, string otp);
     bool ResendOtp(string mobile);
 }
