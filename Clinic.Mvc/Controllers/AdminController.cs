@@ -28,6 +28,15 @@ public class AdminController(IUserService userService) : BaseController
     [HttpPost]
     public async Task<IActionResult> CreateAdmin(CreateUserDto dto)
     {
+        #region Validation
+
+        if (!ModelState.IsValid)
+        {
+            TempData[ErrorMessage] = "Invalid Inputs.";
+            return View(dto);
+        }
+
+        #endregion
         var res= await userService.CreateUser(dto);
         if(res.IsSuccess)
         {
@@ -52,6 +61,15 @@ public class AdminController(IUserService userService) : BaseController
     [HttpPost]
     public async Task<IActionResult> UpdateAdmin(UpdateUserDto dto)
     {
+        #region Validation
+
+        if (!ModelState.IsValid)
+        {
+            TempData[ErrorMessage] = "Invalid Inputs.";
+            return View(dto);
+        }
+
+        #endregion
         var res= await userService.UpdateUser(dto);
         if(res.IsSuccess)
         {
