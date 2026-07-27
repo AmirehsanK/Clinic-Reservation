@@ -70,7 +70,7 @@ public class ReservationService(IGenericRepository<Reservation> reservationRepos
                 
                 if (isAvailable)
                 {
-                    errors.Add($"تاریخ {reserveDate} تا {endDate} رزرو شده است.");
+                    errors.Add($"Date {reserveDate} to {endDate} is already reserved.");
                     continue;
                 }
 
@@ -89,7 +89,7 @@ public class ReservationService(IGenericRepository<Reservation> reservationRepos
         return new BaseResponse()
         {
             IsSuccess = true,
-            Message = "عملیات با موفقیت انجام شد.",
+            Message = "Task completed successfully.",
             Items = errors
         };
     }
@@ -123,7 +123,7 @@ public class ReservationService(IGenericRepository<Reservation> reservationRepos
         return new BaseResponse()
         {
             IsSuccess = true,
-            Message = "عملیات با موفقیت انجام شد.",
+            Message = "Task completed successfully.",
         };
     }
     
@@ -152,7 +152,7 @@ public class ReservationService(IGenericRepository<Reservation> reservationRepos
             return new BaseResponse()
             {
                 IsSuccess = false,
-                Message = "رزرو مورد نظر در سوابق استفاده شده است و قابل حذف نمی باشد.",
+                Message = "Reservation is in use and cannot be deleted.",
             };
         }
 
@@ -162,7 +162,7 @@ public class ReservationService(IGenericRepository<Reservation> reservationRepos
         return new BaseResponse()
         {
             IsSuccess = true,
-            Message = "عملیات با موفقیت انجام شد.",
+            Message = "Task completed successfully.",
         };
     }
     public async Task<BaseResponse> DeleteGroupReservation(List<int> reservationIds)
@@ -174,7 +174,7 @@ public class ReservationService(IGenericRepository<Reservation> reservationRepos
                 .AnyAsync(p => p.ReservationId == reservationId);
             if (usage)
             {
-                errors.Add($"رزرو با شناسه {reservationId} در سوابق استفاده شده است و قابل حذف نمی باشد.");
+                errors.Add($"Reservation with ID {reservationId} is in use and cannot be deleted.");
                 continue;
             }
             await reservationRepository.Delete(reservationId);
@@ -183,7 +183,7 @@ public class ReservationService(IGenericRepository<Reservation> reservationRepos
         return new BaseResponse()
         {
             IsSuccess = true,
-            Message = "عملیات با موفقیت انجام شد.",
+            Message = "Task completed successfully.",
             Items = errors
         };
     }

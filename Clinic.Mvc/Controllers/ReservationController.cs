@@ -28,8 +28,24 @@ public class ReservationController(IReservationService reservationService) : Bas
     [HttpPost("create-reservation")]
     public async Task<IActionResult> CreateGroupReservation(CreateGroupReservationDto dto)
     {
+        #region Validation
+
+        if (!ModelState.IsValid)
+        {
+            TempData[ErrorMessage] = "Invalid Inputs.";
+            return View(dto);
+        }
+
+        #endregion
         
-        return View();
+        var res = await reservationService.CreateGroupReservation(dto);
+        if (res.IsSuccess)
+        {
+            TempData[SuccessMessage] = res.Message;
+            return RedirectToAction("FilterReservation");
+        }
+        TempData[ErrorMessage] = res.Message;
+        return View(dto);
     }
     
     #endregion
