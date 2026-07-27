@@ -341,12 +341,39 @@ public class UserService : IUserService
 
     public async Task<BaseResponse> DeletePatient(int id)
     {
+        var hasRecord = await _reserveRecordRepository.GetAllEntities().AnyAsync(r => r.PatientId == id);
+        if (hasRecord)
+        {
+            return new BaseResponse
+            {
+                IsSuccess = false,
+                Message = "Cannot delete patient with existing reservation records."
+            };
+        }
         await _patientRepository.Delete(id);
         await _patientRepository.SaveChanges();
-        return new BaseResponse()
+        return new BaseResponse
         {
             IsSuccess = true,
             Message = "Patient deleted successfully."
+        };
+    }
+
+    public async Task<BaseResponse> DeletePatientWithRecords(int id)
+    {
+        var records = await _reserveRecordRepository.GetAllEntities().Where(r => r.PatientId == id).ToListAsync();
+        foreach (var record in records)
+        {
+            await _reserveRecordRepository.Delete(record.Id);
+        }
+        await _reserveRecordRepository.SaveChanges();
+        
+        await _patientRepository.Delete(id);
+        await _patientRepository.SaveChanges();
+        return new BaseResponse
+        {
+            IsSuccess = true,
+            Message = "Patient and all related records deleted successfully."
         };
     }
 

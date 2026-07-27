@@ -1,12 +1,149 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Clinic.Application.DTOs.Patients;
+using Clinic.Application.Services.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Clinic.Mvc.Controllers;
 
-public class PatientController : Controller
+public class PatientController(IUserService userService) : BaseController
 {
-    // GET
-    public IActionResult Index()
+    #region Filters
+
+    [HttpGet]
+    public async Task<IActionResult> FilterPatients(FilterPatientsDto dto)
+    {
+        var data = await userService.GetPatientsList(dto);
+        return View(data);
+    }
+
+    #endregion
+
+    #region Create Group
+
+    [HttpGet("create-group-patients")]
+    public IActionResult CreateGroupPatients()
     {
         return View();
-    }  
+    }
+    
+    [HttpPost("create-group-patients")]
+    public async Task<IActionResult> CreateGroupPatients(List<CreateGroupPatientsDto> dto)
+    {
+        #region Validation
+
+        if (!ModelState.IsValid)
+        {
+            TempData[ErrorMessage] = "Invalid Inputs.";
+            return View(dto);
+        }
+
+        #endregion
+        
+        var res = await userService.CreateGroupPatients(dto);
+        if (res.IsSuccess)
+        {
+            TempData[SuccessMessage] = res.Message;
+            return RedirectToAction("FilterPatients");
+        }
+        TempData[ErrorMessage] = res.Message;
+        return View(dto);
+    }
+    
+    #endregion
+    
+    #region Create Single
+
+    [HttpGet("create-patient")]
+    public IActionResult CreatePatient()
+    {
+        return View();
+    }
+    
+    [HttpPost("create-patient")]
+    public async Task<IActionResult> CreatePatient(CreatePatientDto dto)
+    {
+        #region Validation
+
+        if (!ModelState.IsValid)
+        {
+            TempData[ErrorMessage] = "Invalid Inputs.";
+            return View(dto);
+        }
+
+        #endregion
+        
+        var res = await userService.CreatePatient(dto);
+        if (res.IsSuccess)
+        {
+            TempData[SuccessMessage] = res.Message;
+            return RedirectToAction("FilterPatients");
+        }
+        TempData[ErrorMessage] = res.Message;
+        return View(dto);
+    }
+    
+    #endregion
+    
+    #region Update
+
+    [HttpGet("edit-patient/{id}")]
+    public async Task<IActionResult> EditPatient(int id)
+    {
+        var patient = await userService.GetPatientForUpdate(id);
+        return View(patient);
+    }
+    
+    [HttpPost("edit-patient/{id}")]
+    public async Task<IActionResult> EditPatient(UpdatePatientDto dto)
+    {
+        #region Validation
+
+        if (!ModelState.IsValid)
+        {
+            TempData[ErrorMessage] = "Invalid Inputs.";
+            return View(dto);
+        }
+
+        #endregion
+        
+        var res = await userService.UpdatePatient(dto);
+        if (res.IsSuccess)
+        {
+            TempData[SuccessMessage] = res.Message;
+            return RedirectToAction("FilterPatients");
+        }
+        TempData[ErrorMessage] = res.Message;
+        return View(dto);
+    }
+
+    #endregion
+
+    #region Delete
+
+    [Route("delete-patient/{id}")]
+    public async Task<IActionResult> DeletePatient(int id)
+    {
+        var res = await userService.DeletePatient(id);
+        if (res.IsSuccess)
+        {
+            TempData[SuccessMessage] = res.Message;
+            return RedirectToAction("FilterPatients");
+        }
+        TempData[ErrorMessage] = res.Message;
+        return RedirectToAction("FilterPatients");
+    }
+
+    [Route("delete-patient-with-records/{id}")]
+    public async Task<IActionResult> DeletePatientWithRecords(int id)
+    {
+        var res = await userService.DeletePatientWithRecords(id);
+        if (res.IsSuccess)
+        {
+            TempData[SuccessMessage] = res.Message;
+            return RedirectToAction("FilterPatients");
+        }
+        TempData[ErrorMessage] = res.Message;
+        return RedirectToAction("FilterPatients");
+    }
+
+    #endregion
 }

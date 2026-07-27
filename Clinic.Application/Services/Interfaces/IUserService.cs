@@ -36,6 +36,7 @@ public interface IUserService : IAsyncDisposable
     Task<UpdatePatientDto> GetPatientForUpdate(int id);
     Task<BaseResponse> UpdatePatient(UpdatePatientDto updatePatientDto);
     Task<BaseResponse> DeletePatient(int id);
-    
+    Task<BaseResponse> DeletePatientWithRecords(int id);
+
     #endregion
 }
