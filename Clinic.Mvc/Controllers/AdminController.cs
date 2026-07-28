@@ -25,6 +25,7 @@ public class AdminController(IUserService userService) : BaseController
         return View();
     }
 
+    
     [HttpPost]
     public async Task<IActionResult> CreateAdmin(CreateUserDto dto)
     {
