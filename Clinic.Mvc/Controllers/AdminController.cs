@@ -46,7 +46,6 @@ public class AdminController(IUserService userService) : BaseController
         }
         TempData[ErrorMessage] = res.Message;
         return View(dto);
-        
     }
     
     #endregion
