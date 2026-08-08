@@ -1,0 +1,83 @@
+@model AuthenticationDto
+@{
+    Layout = null;
+    ViewData["Title"] = "Verify Code";
+}
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>@ViewData["Title"] - Clinic Reservation</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@tabler/core@latest/dist/css/tabler.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@tabler/icons-webfont@latest/tabler-icons.min.css" />
+</head>
+<body class="border-top-wide border-primary d-flex flex-column">
+<div class="page page-center">
+    <div class="container container-tight py-4">
+        <div class="text-center mb-4">
+            <span class="navbar-brand navbar-brand-autodark">
+                <i class="ti ti-shield-lock fs-1 text-primary"></i>
+            </span>
+            <h1 class="h2 mt-2">Clinic Reservation</h1>
+        </div>
+
+        @await Html.PartialAsync("_Alerts")
+
+        <div class="card card-md">
+            <div class="card-body">
+                <h2 class="h2 text-center mb-2">Verify your mobile number</h2>
+                <p class="text-secondary text-center mb-4">
+                    Enter the code sent to <bdi class="fw-bold">@Model.Mobile</bdi>.
+                </p>
+                <form asp-controller="Account" asp-action="Authentication" method="post" autocomplete="off" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+                    <input asp-for="Mobile" type="hidden" />
+
+                    <div class="mb-3">
+                        <label asp-for="OtpCode" class="form-label">One-time code</label>
+                        <input asp-for="OtpCode" class="form-control text-center" style="letter-spacing: .5rem;" maxlength="6" autofocus />
+                        <span asp-validation-for="OtpCode" class="text-danger small mt-1"></span>
+                    </div>
+
+                    <div class="form-footer">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="ti ti-check me-1"></i>
+                            Sign in
+                        </button>
+                    </div>
+                </form>
+
+                <div class="text-center text-secondary mt-3">
+                    Didn't get a code?
+                    <a href="#" id="resend-otp-link" data-mobile="@Model.Mobile" class="ms-1">Resend code</a>
+                    <span id="resend-otp-message" class="d-block small mt-1"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@@tabler/core@latest/dist/js/tabler.min.js"></script>
+@await Html.PartialAsync("_ValidationScriptsPartial")
+<script>
+    document.getElementById('resend-otp-link').addEventListener('click', function (event) {
+        event.preventDefault();
+        var link = event.currentTarget;
+        var messageEl = document.getElementById('resend-otp-message');
+        var mobile = link.getAttribute('data-mobile');
+
+        fetch('/resend-otp?mobile=' + encodeURIComponent(mobile), { method: 'POST' })
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
+                messageEl.textContent = data.message;
+                messageEl.classList.add('text-success');
+            })
+            .catch(function () {
+                messageEl.textContent = 'Failed to resend the code.';
+                messageEl.classList.add('text-danger');
+            });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+@{
+    var alerts = new (string Key, string CssClass, string Icon)[]
+    {
+        ("SuccessMessage", "alert-success", "circle-check"),
+        ("ErrorMessage", "alert-danger", "alert-circle"),
+        ("WarningMessage", "alert-warning", "alert-triangle"),
+        ("InfoMessage", "alert-info", "info-circle")
+    };
+}
+@foreach (var alert in alerts)
+{
+    if (TempData[alert.Key] is string message && !string.IsNullOrWhiteSpace(message))
+    {
+        <div class="alert @alert.CssClass alert-dismissible" role="alert">
+            <div class="d-flex">
+                <div><i class="ti ti-@alert.Icon icon alert-icon"></i></div>
+                <div>@message</div>
+            </div>
+            <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+        </div>
+    }
+}

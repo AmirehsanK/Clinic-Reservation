@@ -1,0 +1,58 @@
+@model EditRecordDto
+@{
+    ViewData["Title"] = "Edit Record";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Record Details</h3>
+            </div>
+            <div class="card-body">
+                <form asp-controller="Record" asp-action="EditRecord" method="post" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+                    <input asp-for="Id" type="hidden" />
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Status" class="form-label">Attendance Status</label>
+                            <select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<ReserveStatus>()"></select>
+                            <span asp-validation-for="Status" class="text-danger small mt-1"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="PaymentType" class="form-label">Payment Type</label>
+                            <select asp-for="PaymentType" class="form-select" asp-items="Html.GetEnumSelectList<PaymentType>()"></select>
+                            <span asp-validation-for="PaymentType" class="text-danger small mt-1"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="PaidPrice" class="form-label">Paid Price</label>
+                            <input asp-for="PaidPrice" type="number" min="0" class="form-control" />
+                            <span asp-validation-for="PaidPrice" class="text-danger small mt-1"></span>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label asp-for="Description" class="form-label">Notes</label>
+                            <textarea asp-for="Description" class="form-control" rows="4" placeholder="Doctor / admin notes about this appointment"></textarea>
+                            <span asp-validation-for="Description" class="text-danger small mt-1"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-footer d-flex justify-content-between">
+                        <a asp-controller="Record" asp-action="Index" class="btn btn-link">
+                            <i class="ti ti-arrow-left me-1"></i>
+                            Back to list
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ti ti-device-floppy me-1"></i>
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

@@ -1,0 +1,18 @@
+@{
+    ViewData["Title"] = "خطا";
+}
+<div class="empty">
+    <div class="empty-icon">
+        <i class="ti ti-alert-triangle" style="font-size: 4rem;"></i>
+    </div>
+    <p class="empty-title">مشکلی پیش آمده است</p>
+    <p class="empty-subtitle text-secondary">
+        هنگام پردازش درخواست شما خطایی رخ داد. لطفاً دوباره تلاش کنید یا با پشتیبانی تماس بگیرید.
+    </p>
+    <div class="empty-action">
+        <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
+            <i class="ti ti-home me-1"></i>
+            بازگشت به داشبورد
+        </a>
+    </div>
+</div>

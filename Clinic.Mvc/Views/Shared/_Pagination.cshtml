@@ -1,0 +1,53 @@
+@model BasePaging
+@{
+    var formId = ViewData["FormId"] as string ?? "filterForm";
+    var pageFieldId = ViewData["PageFieldId"] as string ?? "PageId";
+}
+@if (Model.PageCount > 1)
+{
+    <ul class="pagination m-0">
+        <li class="page-item @(Model.PageId <= 1 ? "disabled" : "")">
+            <a class="page-link" href="#" tabindex="-1" aria-disabled="@(Model.PageId <= 1 ? "true" : "false")"
+               onclick="return TablerPaging.goTo(@(Model.PageId - 1), '@formId', '@pageFieldId')">
+                <i class="ti ti-chevron-left"></i>
+                Prev
+            </a>
+        </li>
+
+        @if (Model.StartPage > 1)
+        {
+            <li class="page-item">
+                <a class="page-link" href="#" onclick="return TablerPaging.goTo(1, '@formId', '@pageFieldId')">1</a>
+            </li>
+            @if (Model.StartPage > 2)
+            {
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+            }
+        }
+
+        @for (var pageNumber = Model.StartPage; pageNumber <= Model.EndPage; pageNumber++)
+        {
+            <li class="page-item @(pageNumber == Model.PageId ? "active" : "")">
+                <a class="page-link" href="#" onclick="return TablerPaging.goTo(@pageNumber, '@formId', '@pageFieldId')">@pageNumber</a>
+            </li>
+        }
+
+        @if (Model.EndPage < Model.PageCount)
+        {
+            @if (Model.EndPage < Model.PageCount - 1)
+            {
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+            }
+            <li class="page-item">
+                <a class="page-link" href="#" onclick="return TablerPaging.goTo(@Model.PageCount, '@formId', '@pageFieldId')">@Model.PageCount</a>
+            </li>
+        }
+
+        <li class="page-item @(Model.PageId >= Model.PageCount ? "disabled" : "")">
+            <a class="page-link" href="#" onclick="return TablerPaging.goTo(@(Model.PageId + 1), '@formId', '@pageFieldId')">
+                Next
+                <i class="ti ti-chevron-right"></i>
+            </a>
+        </li>
+    </ul>
+}

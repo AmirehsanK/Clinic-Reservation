@@ -1,0 +1,54 @@
+@model UserLoginDto
+@{
+    Layout = null;
+    ViewData["Title"] = "Sign In";
+}
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>@ViewData["Title"] - Clinic Reservation</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@tabler/core@latest/dist/css/tabler.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@tabler/icons-webfont@latest/tabler-icons.min.css" />
+</head>
+<body class="border-top-wide border-primary d-flex flex-column">
+<div class="page page-center">
+    <div class="container container-tight py-4">
+        <div class="text-center mb-4">
+            <span class="navbar-brand navbar-brand-autodark">
+                <i class="ti ti-stethoscope fs-1 text-primary"></i>
+            </span>
+            <h1 class="h2 mt-2">Clinic Reservation</h1>
+        </div>
+
+        @await Html.PartialAsync("_Alerts")
+
+        <div class="card card-md">
+            <div class="card-body">
+                <h2 class="h2 text-center mb-4">Sign in to your account</h2>
+                <form asp-controller="Account" asp-action="Login" method="post" autocomplete="off" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Mobile" class="form-label">Mobile number</label>
+                        <input asp-for="Mobile" class="form-control" placeholder="e.g. 5551234567" autofocus />
+                        <span asp-validation-for="Mobile" class="text-danger small mt-1"></span>
+                    </div>
+
+                    <div class="form-footer">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="ti ti-send me-1"></i>
+                            Send one-time code
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@@tabler/core@latest/dist/js/tabler.min.js"></script>
+@await Html.PartialAsync("_ValidationScriptsPartial")
+</body>
+</html>

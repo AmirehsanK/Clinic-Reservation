@@ -1,0 +1,28 @@
+@{
+    ViewData["Title"] = "Dashboard";
+
+    var cards = new (string Controller, string Action, string Icon, string Title, string Description, string Color)[]
+    {
+        ("Admin", "AdminsList", "ti-user-shield", "Admins", "Manage admin users of the system", "blue"),
+        ("Patient", "FilterPatients", "ti-users", "Patients", "Search, view and register patients", "pink"),
+        ("Reservation", "FilterReservation", "ti-calendar-time", "Reservations", "Manage reservation time slots", "green"),
+        ("Record", "Index", "ti-clipboard-list", "Records", "Manage patient appointment records", "purple")
+    };
+}
+
+<div class="row row-cards">
+    @foreach (var card in cards)
+    {
+        <div class="col-sm-6 col-lg-3">
+            <a asp-controller="@card.Controller" asp-action="@card.Action" class="card card-link text-decoration-none">
+                <div class="card-body text-center">
+                    <span class="avatar avatar-lg bg-@card.Color-lt mb-3">
+                        <i class="ti @card.Icon fs-1"></i>
+                    </span>
+                    <h3 class="card-title mb-1">@card.Title</h3>
+                    <p class="text-secondary mb-0">@card.Description</p>
+                </div>
+            </a>
+        </div>
+    }
+</div>
