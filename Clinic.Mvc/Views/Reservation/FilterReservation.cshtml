@@ -1,18 +1,187 @@
-﻿@model Clinic.Application.DTOs.Reservations.FilterReservationsDto
-
+﻿@model FilterReservationsDto
 @{
-    Layout = null;
+    ViewData["Title"] = "Reservations";
 }
 
-<!DOCTYPE html>
+@section PageActions {
+    <div class="btn-list">
+        <a asp-controller="Reservation" asp-action="CreateGroupReservation" class="btn btn-outline-primary">
+            <i class="ti ti-calendar-plus me-1"></i>
+            Batch Generate
+        </a>
+        <a asp-controller="Reservation" asp-action="CreateReservation" class="btn btn-primary">
+            <i class="ti ti-plus me-1"></i>
+            New Time Slot
+        </a>
+    </div>
+}
 
-<html>
-<head>
-    <title>title</title>
-</head>
-<body>
-<div>
-      
+<div class="card mb-3">
+    <div class="card-header">
+        <h3 class="card-title">Filter Time Slots</h3>
+    </div>
+    <div class="card-body">
+        <form id="filterForm" asp-controller="Reservation" asp-action="FilterReservation" method="get">
+            <input type="hidden" asp-for="PageId" id="PageId" />
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label asp-for="ReserveTime" class="form-label">From Date</label>
+                    <input asp-for="ReserveTime" type="date" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="EndReserveTime" class="form-label">To Date</label>
+                    <input asp-for="EndReserveTime" type="date" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="FilterReservationStatus" class="form-label">Status</label>
+                    <select asp-for="FilterReservationStatus" class="form-select" asp-items="Html.GetEnumSelectList<FilterReservationStatus>()"></select>
+                </div>
+            </div>
+            <div class="form-footer">
+                <button type="submit" class="btn btn-primary">
+                    <i class="ti ti-filter me-1"></i>
+                    Apply Filters
+                </button>
+                <a asp-controller="Reservation" asp-action="FilterReservation" class="btn btn-link">
+                    <i class="ti ti-x me-1"></i>
+                    Clear
+                </a>
+            </div>
+        </form>
+    </div>
 </div>
-</body>
-</html>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Time Slots</h3>
+        <div class="card-actions">
+            <button type="button" id="delete-selected-btn" class="btn btn-outline-danger btn-sm" disabled>
+                <i class="ti ti-trash me-1"></i>
+                Delete Selected
+            </button>
+            <span class="badge bg-blue-lt ms-2">@Model.AllEntitiesCount total</span>
+        </div>
+    </div>
+
+    @if (Model.Data is null || Model.Data.Count == 0)
+    {
+        <div class="empty">
+            <div class="empty-icon"><i class="ti ti-calendar-time" style="font-size: 3rem;"></i></div>
+            <p class="empty-title">No time slots found</p>
+            <p class="empty-subtitle text-secondary">Try adjusting your filters, or create a new time slot.</p>
+            <div class="empty-action">
+                <a asp-controller="Reservation" asp-action="CreateReservation" class="btn btn-primary">
+                    <i class="ti ti-plus me-1"></i>
+                    New Time Slot
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead>
+                <tr>
+                    <th class="w-1"><input type="checkbox" class="form-check-input" id="select-all" /></th>
+                    <th>#</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Status</th>
+                    <th class="w-1">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var reservation in Model.Data)
+                {
+                    <tr>
+                        <td><input type="checkbox" class="form-check-input reservation-checkbox" value="@reservation.Id" /></td>
+                        <td class="text-secondary">@reservation.Id</td>
+                        <td>@reservation.ReserveTime.ToString("MMM dd, yyyy HH:mm")</td>
+                        <td>@reservation.EndReserveTime.ToString("MMM dd, yyyy HH:mm")</td>
+                        <td>
+                            <span class="status">
+                                <span class="status-dot status-dot-animated @reservation.Reserved.ToStatusDotClass() me-1"></span>
+                                @reservation.Reserved.ToStatusDotLabel()
+                            </span>
+                        </td>
+                        <td>
+                            <a asp-controller="Reservation" asp-action="DeleteReservation" asp-route-id="@reservation.Id"
+                               class="btn btn-outline-danger btn-icon" title="Delete" aria-label="Delete time slot @reservation.Id"
+                               data-confirm="Are you sure you want to delete this time slot?">
+                                <i class="ti ti-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer d-flex align-items-center">
+            <p class="m-0 text-secondary">@Model.GetCurrentPagingStatus()</p>
+            <div class="ms-auto">
+                @await Html.PartialAsync("_Pagination", (BasePaging)Model)
+            </div>
+        </div>
+    }
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080">
+    <div id="action-toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto" id="action-toast-title">Notice</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="action-toast-body"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var selectAll = document.getElementById('select-all');
+            var deleteBtn = document.getElementById('delete-selected-btn');
+            var toastEl = document.getElementById('action-toast');
+            var toast = new bootstrap.Toast(toastEl);
+
+            function checkboxes() {
+                return Array.prototype.slice.call(document.querySelectorAll('.reservation-checkbox'));
+            }
+
+            function refreshDeleteButtonState() {
+                var anyChecked = checkboxes().some(function (cb) { return cb.checked; });
+                deleteBtn.disabled = !anyChecked;
+            }
+
+            checkboxes().forEach(function (cb) {
+                cb.addEventListener('change', refreshDeleteButtonState);
+            });
+
+            selectAll.addEventListener('change', function () {
+                checkboxes().forEach(function (cb) { cb.checked = selectAll.checked; });
+                refreshDeleteButtonState();
+            });
+
+            deleteBtn.addEventListener('click', function () {
+                var ids = checkboxes().filter(function (cb) { return cb.checked; }).map(function (cb) { return parseInt(cb.value, 10); });
+                if (ids.length === 0) {
+                    return;
+                }
+                if (!confirm('Delete ' + ids.length + ' selected time slot(s)? This cannot be undone.')) {
+                    return;
+                }
+
+                tablerPostJson('/delete-group-reservation', ids, function (data) {
+                    document.getElementById('action-toast-title').textContent = data.isSuccess ? 'Success' : 'Error';
+                    var body = data.message || '';
+                    if (data.items && data.items.length > 0) {
+                        body += '\n' + data.items.join('\n');
+                    }
+                    document.getElementById('action-toast-body').textContent = body;
+                    toast.show();
+                    setTimeout(function () { window.location.reload(); }, 1500);
+                });
+            });
+        })();
+    </script>
+}

@@ -52,7 +52,7 @@ public class ReservationService(IGenericRepository<Reservation> reservationRepos
         for (var day = 1; day <= daysInMonth; day++)
         {
             var currentDate = new DateTime(createGroupReservation.Year, createGroupReservation.Month, day);
-            if(createGroupReservation.VisitDays.Contains(currentDate.DayOfWeek))
+            if(!createGroupReservation.VisitDays.Contains(currentDate.DayOfWeek))
             {
                 continue;
             }
@@ -106,7 +106,7 @@ public class ReservationService(IGenericRepository<Reservation> reservationRepos
             return new BaseResponse()
             {
                 IsSuccess = false,
-                Message = "تاریخ انتخاب شده رزرو شده است.",
+                Message = "The selected time is already reserved.",
             };
         }
 

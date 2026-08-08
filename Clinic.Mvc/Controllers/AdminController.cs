@@ -1,9 +1,11 @@
 ﻿using Clinic.Application.DTOs.Users;
 using Clinic.Application.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Clinic.Mvc.Controllers;
 
+[Authorize]
 public class AdminController(IUserService userService) : BaseController
 {
     #region Admin Users List
@@ -22,7 +24,7 @@ public class AdminController(IUserService userService) : BaseController
     [HttpGet]
     public IActionResult CreateAdmin()
     {
-        return View();
+        return View(new CreateUserDto());
     }
 
     

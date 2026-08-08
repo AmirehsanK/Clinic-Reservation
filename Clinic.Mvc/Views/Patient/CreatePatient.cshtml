@@ -1,18 +1,67 @@
-﻿@model dynamic
-
+﻿@model CreatePatientDto
 @{
-    Layout = null;
+    ViewData["Title"] = "New Patient";
 }
 
-<!DOCTYPE html>
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Patient Details</h3>
+            </div>
+            <div class="card-body">
+                <form asp-controller="Patient" asp-action="CreatePatient" method="post" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
 
-<html>
-<head>
-    <title>title</title>
-</head>
-<body>
-<div>
-      
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="FullName" class="form-label">Full Name</label>
+                            <input asp-for="FullName" class="form-control" placeholder="Enter full name" />
+                            <span asp-validation-for="FullName" class="text-danger small mt-1"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Mobile" class="form-label">Mobile Number</label>
+                            <input asp-for="Mobile" class="form-control" placeholder="e.g. 5551234567" />
+                            <span asp-validation-for="Mobile" class="text-danger small mt-1"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="NationalId" class="form-label">National ID</label>
+                            <input asp-for="NationalId" class="form-control" placeholder="Enter national ID" />
+                            <span asp-validation-for="NationalId" class="text-danger small mt-1"></span>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label asp-for="Age" class="form-label">Age</label>
+                            <input asp-for="Age" type="number" min="0" class="form-control" />
+                            <span asp-validation-for="Age" class="text-danger small mt-1"></span>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label asp-for="Gender" class="form-label">Gender</label>
+                            <select asp-for="Gender" class="form-select" asp-items="Html.GetEnumSelectList<Gender>()"></select>
+                            <span asp-validation-for="Gender" class="text-danger small mt-1"></span>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label asp-for="Description" class="form-label">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="4" placeholder="Optional notes about the patient"></textarea>
+                            <span asp-validation-for="Description" class="text-danger small mt-1"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-footer d-flex justify-content-between">
+                        <a asp-controller="Patient" asp-action="FilterPatients" class="btn btn-link">
+                            <i class="ti ti-arrow-left me-1"></i>
+                            Back to list
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ti ti-device-floppy me-1"></i>
+                            Save Patient
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
-</body>
-</html>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

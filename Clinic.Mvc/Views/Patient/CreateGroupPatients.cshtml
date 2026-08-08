@@ -1,18 +1,138 @@
-﻿@model dynamic
-
+﻿@model List<CreateGroupPatientsDto>
 @{
-    Layout = null;
+    ViewData["Title"] = "Batch Create Patients";
+    var rows = Model is { Count: > 0 } ? Model : new List<CreateGroupPatientsDto> { new() };
 }
 
-<!DOCTYPE html>
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Add Multiple Patients</h3>
+        <div class="card-actions">
+            <button type="button" id="add-row" class="btn btn-outline-primary btn-sm">
+                <i class="ti ti-plus me-1"></i>
+                Add Row
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
 
-<html>
-<head>
-    <title>title</title>
-</head>
-<body>
-<div>
-      
+        <form asp-controller="Patient" asp-action="CreateGroupPatients" method="post">
+            <div class="table-responsive">
+                <table class="table card-table" id="patients-table">
+                    <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>Mobile</th>
+                        <th>National ID</th>
+                        <th style="width:110px">Age</th>
+                        <th style="width:170px">Gender</th>
+                        <th class="w-1"></th>
+                    </tr>
+                    </thead>
+                    <tbody id="patients-tbody">
+                    @for (var i = 0; i < rows.Count; i++)
+                    {
+                        <tr class="patient-row">
+                            <td><input name="[@i].FullName" class="form-control" placeholder="Full name" value="@rows[i].FullName" required /></td>
+                            <td><input name="[@i].Mobile" class="form-control" placeholder="Mobile" value="@rows[i].Mobile" required /></td>
+                            <td><input name="[@i].NationalId" class="form-control" placeholder="National ID" value="@rows[i].NationalId" required /></td>
+                            <td><input name="[@i].Age" type="number" min="0" class="form-control" value="@rows[i].Age" /></td>
+                            <td>
+                                <select name="[@i].Gender" class="form-select">
+                                    @foreach (var gender in Enum.GetValues<Gender>())
+                                    {
+                                        <option value="@((int)gender)" selected="@(gender == rows[i].Gender)">@gender.GetDisplayName()</option>
+                                    }
+                                </select>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-outline-danger btn-icon remove-row" title="Remove row" aria-label="Remove row">
+                                    <i class="ti ti-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="form-footer d-flex justify-content-between">
+                <a asp-controller="Patient" asp-action="FilterPatients" class="btn btn-link">
+                    <i class="ti ti-arrow-left me-1"></i>
+                    Back to list
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="ti ti-device-floppy me-1"></i>
+                    Save All Patients
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
-</body>
-</html>
+
+<template id="row-template">
+    <tr class="patient-row">
+        <td><input name="[__INDEX__].FullName" class="form-control" placeholder="Full name" required /></td>
+        <td><input name="[__INDEX__].Mobile" class="form-control" placeholder="Mobile" required /></td>
+        <td><input name="[__INDEX__].NationalId" class="form-control" placeholder="National ID" required /></td>
+        <td><input name="[__INDEX__].Age" type="number" min="0" class="form-control" value="0" /></td>
+        <td>
+            <select name="[__INDEX__].Gender" class="form-select">
+                @foreach (var gender in Enum.GetValues<Gender>())
+                {
+                    <option value="@((int)gender)">@gender.GetDisplayName()</option>
+                }
+            </select>
+        </td>
+        <td>
+            <button type="button" class="btn btn-outline-danger btn-icon remove-row" title="Remove row" aria-label="Remove row">
+                <i class="ti ti-trash"></i>
+            </button>
+        </td>
+    </tr>
+</template>
+
+@section Scripts {
+    <script>
+        (function () {
+            var tbody = document.getElementById('patients-tbody');
+            var addBtn = document.getElementById('add-row');
+            var template = document.getElementById('row-template');
+
+            function reindexRows() {
+                var rows = tbody.querySelectorAll('tr.patient-row');
+                rows.forEach(function (row, index) {
+                    row.querySelectorAll('[name]').forEach(function (input) {
+                        var name = input.getAttribute('name');
+                        input.setAttribute('name', name.replace(/^\[\d+\]/, '[' + index + ']'));
+                    });
+                });
+            }
+
+            function wireRemoveButtons() {
+                tbody.querySelectorAll('.remove-row').forEach(function (btn) {
+                    btn.onclick = function () {
+                        if (tbody.querySelectorAll('tr.patient-row').length <= 1) {
+                            return;
+                        }
+                        btn.closest('tr').remove();
+                        reindexRows();
+                    };
+                });
+            }
+
+            addBtn.addEventListener('click', function () {
+                var index = tbody.querySelectorAll('tr.patient-row').length;
+                var clone = template.content.firstElementChild.cloneNode(true);
+                clone.querySelectorAll('[name]').forEach(function (input) {
+                    input.setAttribute('name', input.getAttribute('name').replace('__INDEX__', index));
+                });
+                tbody.appendChild(clone);
+                wireRemoveButtons();
+            });
+
+            wireRemoveButtons();
+        })();
+    </script>
+}

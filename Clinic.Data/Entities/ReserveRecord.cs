@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Clinic.Data.Entities;
 
@@ -19,14 +20,20 @@ public class ReserveRecord : BaseEntity
 
 public enum ReserveStatus
 {
+    [Display(Name = "Reserved")]
     Reserved,
+    [Display(Name = "Cancelled")]
     Cancelled,
+    [Display(Name = "Attended")]
     Attended
 }
 
 public enum PaymentType
 {
+    [Display(Name = "Cash")]
     Cash,
+    [Display(Name = "Credit Card")]
     CreditCard,
+    [Display(Name = "Not Paid")]
     NotPaid
 }

@@ -27,7 +27,7 @@ public class RecordService : IRecordService
     
     public async Task<FilterRecordsDto> FilterRecords(FilterRecordsDto filter)
     {
-        var query = _recordRepository.GetAllEntities().Include(r=>r.Patient)
+        var query = _recordRepository.GetAllEntities().Include(r=>r.Patient).Include(r => r.Reservation)
             .OrderByDescending(p => p.CreateDate).AsQueryable();
 
         #region Switch
@@ -123,7 +123,7 @@ public class RecordService : IRecordService
             return new BaseResponse()
             {
                 IsSuccess = false,
-                Message = "نوبت رزرو شده است."
+                Message = "This time slot is already reserved."
             };
 
         #endregion
@@ -154,12 +154,16 @@ public class RecordService : IRecordService
         };
         
         await _recordRepository.Create(reservation);
+
+        availablity.Reserved = true;
+        _reservationRepository.Update(availablity);
+
         await _recordRepository.SaveChanges();
         return new BaseResponse
         {
             Id = reservation.Id,
             IsSuccess = true,
-            Message = "نوبت با موفقیت رزرو شد."
+            Message = "Appointment reserved successfully."
         };
     }
 
@@ -189,7 +193,7 @@ public class RecordService : IRecordService
         return new BaseResponse
         {
             IsSuccess = true,
-            Message = "رکورد با موفقیت به روزرسانی شد."
+            Message = "Record updated successfully."
         };
     }
 
@@ -200,7 +204,7 @@ public class RecordService : IRecordService
         return new BaseResponse
         {
             IsSuccess = true,
-            Message = "رکورد با موفقیت حذف شد."
+            Message = "Record deleted successfully."
         };
     }
 

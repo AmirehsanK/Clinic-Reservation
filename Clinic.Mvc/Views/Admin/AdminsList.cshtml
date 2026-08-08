@@ -1,18 +1,81 @@
-﻿@model System.Collections.Generic.List<Clinic.Application.DTOs.Users.UserDetailsDto>
-
+﻿@model List<UserDetailsDto>
 @{
-    Layout = null;
+    ViewData["Title"] = "Admins List";
 }
 
-<!DOCTYPE html>
+@section PageActions {
+    <a asp-controller="Admin" asp-action="CreateAdmin" class="btn btn-primary">
+        <i class="ti ti-plus me-1"></i>
+        Create New Admin
+    </a>
+}
 
-<html>
-<head>
-    <title>title</title>
-</head>
-<body>
-<div>
-      
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">System Admins</h3>
+        <div class="card-actions">
+            <span class="badge bg-blue-lt">@Model.Count total</span>
+        </div>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <div class="empty">
+            <div class="empty-icon"><i class="ti ti-user-shield" style="font-size: 3rem;"></i></div>
+            <p class="empty-title">No admins found</p>
+            <p class="empty-subtitle text-secondary">Get started by creating a new admin.</p>
+            <div class="empty-action">
+                <a asp-controller="Admin" asp-action="CreateAdmin" class="btn btn-primary">
+                    <i class="ti ti-plus me-1"></i>
+                    Create New Admin
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Full Name</th>
+                    <th>Mobile</th>
+                    <th>Created On</th>
+                    <th class="w-1">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var admin in Model)
+                {
+                    <tr>
+                        <td class="text-secondary">@admin.Id</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <span class="avatar avatar-sm bg-blue-lt me-2"><i class="ti ti-user"></i></span>
+                                @admin.FullName
+                            </div>
+                        </td>
+                        <td class="text-secondary">@admin.Mobile</td>
+                        <td class="text-secondary">@admin.CreateDate.ToString("MMM dd, yyyy")</td>
+                        <td>
+                            <div class="btn-list flex-nowrap">
+                                <a asp-controller="Admin" asp-action="UpdateAdmin" asp-route-id="@admin.Id"
+                                   class="btn btn-outline-primary btn-icon" title="Edit" aria-label="Edit @admin.FullName">
+                                    <i class="ti ti-pencil"></i>
+                                </a>
+                                <a asp-controller="Admin" asp-action="DeleteAdmin" asp-route-id="@admin.Id"
+                                   class="btn btn-outline-danger btn-icon"
+                                   title="Delete" aria-label="Delete @admin.FullName"
+                                   data-confirm="Are you sure you want to delete admin &quot;@admin.FullName&quot;?">
+                                    <i class="ti ti-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
 </div>
-</body>
-</html>

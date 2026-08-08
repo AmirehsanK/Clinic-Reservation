@@ -1,18 +1,136 @@
-﻿@model dynamic
-
+﻿@model CreateGroupReservationDto
 @{
-    Layout = null;
+    ViewData["Title"] = "Batch Generate Time Slots";
+    var visitTimes = Model.VisitTimes is { Count: > 0 } ? Model.VisitTimes : new List<TimeSpan> { new(9, 0, 0) };
 }
 
-<!DOCTYPE html>
+<form asp-controller="Reservation" asp-action="CreateGroupReservation" method="post" novalidate>
+    <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
 
-<html>
-<head>
-    <title>title</title>
-</head>
-<body>
-<div>
-      
-</div>
-</body>
-</html>
+    <div class="row row-cards">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Month to Generate</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label asp-for="Year" class="form-label">Year</label>
+                            <input asp-for="Year" type="number" class="form-control" />
+                            <span asp-validation-for="Year" class="text-danger small mt-1"></span>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label asp-for="Month" class="form-label">Month</label>
+                            <input asp-for="Month" type="number" min="1" max="12" class="form-control" />
+                            <span asp-validation-for="Month" class="text-danger small mt-1"></span>
+                        </div>
+                    </div>
+
+                    <label class="form-label">Days of Week</label>
+                    <div class="form-selectgroup form-selectgroup-pills">
+                        @foreach (var day in Enum.GetValues<DayOfWeek>())
+                        {
+                            <label class="form-selectgroup-item">
+                                <input type="checkbox" name="VisitDays" value="@day" class="form-selectgroup-input" checked="@(Model.VisitDays?.Contains(day) == true)" />
+                                <span class="form-selectgroup-label">@day</span>
+                            </label>
+                        }
+                    </div>
+                    <span asp-validation-for="VisitDays" class="text-danger small mt-1"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Visit Times</h3>
+                    <div class="card-actions">
+                        <button type="button" id="add-time" class="btn btn-outline-primary btn-sm">
+                            <i class="ti ti-plus me-1"></i>
+                            Add Time
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="visit-times-container">
+                        @for (var i = 0; i < visitTimes.Count; i++)
+                        {
+                            <div class="input-group mb-2 visit-time-row">
+                                <input type="time" name="VisitTimes[@i]" class="form-control" value="@visitTimes[i].ToString(@"hh\:mm")" />
+                                <button type="button" class="btn btn-outline-danger remove-time" title="Remove" aria-label="Remove time">
+                                    <i class="ti ti-trash"></i>
+                                </button>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="mb-0 mt-3">
+                        <label asp-for="VisitDuration" class="form-label">Visit Duration (minutes)</label>
+                        <input asp-for="VisitDuration" type="number" min="1" class="form-control" />
+                        <span asp-validation-for="VisitDuration" class="text-danger small mt-1"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-footer d-flex justify-content-between">
+        <a asp-controller="Reservation" asp-action="FilterReservation" class="btn btn-link">
+            <i class="ti ti-arrow-left me-1"></i>
+            Back to list
+        </a>
+        <button type="submit" class="btn btn-primary">
+            <i class="ti ti-device-floppy me-1"></i>
+            Generate Time Slots
+        </button>
+    </div>
+</form>
+
+<template id="visit-time-template">
+    <div class="input-group mb-2 visit-time-row">
+        <input type="time" name="VisitTimes[__INDEX__]" class="form-control" value="09:00" />
+        <button type="button" class="btn btn-outline-danger remove-time" title="Remove" aria-label="Remove time">
+            <i class="ti ti-trash"></i>
+        </button>
+    </div>
+</template>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script>
+        (function () {
+            var container = document.getElementById('visit-times-container');
+            var addBtn = document.getElementById('add-time');
+            var template = document.getElementById('visit-time-template');
+
+            function reindex() {
+                container.querySelectorAll('.visit-time-row input[type="time"]').forEach(function (input, index) {
+                    input.setAttribute('name', 'VisitTimes[' + index + ']');
+                });
+            }
+
+            function wireRemoveButtons() {
+                container.querySelectorAll('.remove-time').forEach(function (btn) {
+                    btn.onclick = function () {
+                        if (container.querySelectorAll('.visit-time-row').length <= 1) {
+                            return;
+                        }
+                        btn.closest('.visit-time-row').remove();
+                        reindex();
+                    };
+                });
+            }
+
+            addBtn.addEventListener('click', function () {
+                var clone = template.content.firstElementChild.cloneNode(true);
+                container.appendChild(clone);
+                reindex();
+                wireRemoveButtons();
+            });
+
+            wireRemoveButtons();
+        })();
+    </script>
+}

@@ -35,10 +35,10 @@ public class FilterReservationsDto : BasePaging
 
 public enum FilterReservationStatus
 {
-    [Display(Name = "همه")]
+    [Display(Name = "All")]
     All,
-    [Display(Name = "رزرو شده")]
+    [Display(Name = "Reserved")]
     Reserved,
-    [Display(Name = "رزرو نشده")]
+    [Display(Name = "Not Reserved")]
     NotReserved
 }

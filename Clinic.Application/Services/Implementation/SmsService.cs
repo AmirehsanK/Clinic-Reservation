@@ -1,16 +1,20 @@
 ﻿using Clinic.Application.Services.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace Clinic.Application.Services.Implementation;
 
-public class SmsService: ISmsService
+public class SmsService(ILogger<SmsService> logger) : ISmsService
 {
-    public async Task SendOtp(string mobile, string otp)
+    public Task SendOtp(string mobile, string otp)
     {
-        throw new NotImplementedException();
+        // TODO: Replace with a real SMS gateway integration for production use.
+        // Logging the code keeps local development and testing functional out of the box.
+        logger.LogInformation("OTP for {Mobile}: {Otp}", mobile, otp);
+        return Task.CompletedTask;
     }
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
-        // TODO release managed resources here
+        return ValueTask.CompletedTask;
     }
 }

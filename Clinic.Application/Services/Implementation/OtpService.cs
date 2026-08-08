@@ -15,7 +15,19 @@ public class OtpService(IMemoryCache cache) :IOtpService
 
     public bool ValidateOtp(string mobile, string otp)
     {
-        return cache.TryGetValue(mobile, out _);
+        if (!cache.TryGetValue(mobile, out string? cachedOtp) || string.IsNullOrEmpty(cachedOtp))
+        {
+            return false;
+        }
+
+        var isValid = cachedOtp == otp;
+        if (isValid)
+        {
+            // Prevent replay: a code can only be used once.
+            cache.Remove(mobile);
+        }
+
+        return isValid;
     }
 
     public bool ResendOtp(string mobile)

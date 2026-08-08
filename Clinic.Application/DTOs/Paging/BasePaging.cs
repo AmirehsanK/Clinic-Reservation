@@ -32,7 +32,7 @@ public class BasePaging
             }
             
         }
-        return $"نمایش {startItem} تا {endItem} از {AllEntitiesCount} مورد";
+        return $"Showing {startItem} to {endItem} of {AllEntitiesCount} entries";
     }
     
     public BasePaging GetCurrentPaging()

@@ -1,4 +1,6 @@
-﻿namespace Clinic.Data.Entities;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Clinic.Data.Entities;
 
 public class Patient : BaseEntity
 {
@@ -11,7 +13,10 @@ public class Patient : BaseEntity
 }
 public enum Gender
 {
+    [Display(Name = "Male")]
     Male,
+    [Display(Name = "Female")]
     Female,
+    [Display(Name = "Not Specified")]
     NotSpecified
 }

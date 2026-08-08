@@ -1,4 +1,5 @@
-﻿using Clinic.Application.DTOs.Paging;
+﻿using System.ComponentModel.DataAnnotations;
+using Clinic.Application.DTOs.Paging;
 using Clinic.Data.Entities;
 
 namespace Clinic.Application.DTOs.Patients;
@@ -37,8 +38,12 @@ public class FilterPatientsDto : BasePaging
 
 public enum FilterGender
 {
+    [Display(Name = "All")]
     All,
+    [Display(Name = "Male")]
     Male,
+    [Display(Name = "Female")]
     Female,
+    [Display(Name = "Not Specified")]
     NotSpecified
 }

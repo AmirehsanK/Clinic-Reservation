@@ -1,9 +1,11 @@
 using Clinic.Application.DTOs.Patients;
 using Clinic.Application.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Clinic.Mvc.Controllers;
 
+[Authorize]
 public class PatientController(IUserService userService) : BaseController
 {
     #region Filters
@@ -41,10 +43,10 @@ public class PatientController(IUserService userService) : BaseController
         var res = await userService.CreateGroupPatients(dto);
         if (res.IsSuccess)
         {
-            TempData[SuccessMessage] = res.Message;
+            TempData[SuccessMessage] = BuildFlashMessage(res);
             return RedirectToAction("FilterPatients");
         }
-        TempData[ErrorMessage] = res.Message;
+        TempData[ErrorMessage] = BuildFlashMessage(res);
         return View(dto);
     }
     
@@ -55,7 +57,7 @@ public class PatientController(IUserService userService) : BaseController
     [HttpGet("create-patient")]
     public IActionResult CreatePatient()
     {
-        return View();
+        return View(new CreatePatientDto());
     }
     
     [HttpPost("create-patient")]
@@ -74,10 +76,10 @@ public class PatientController(IUserService userService) : BaseController
         var res = await userService.CreatePatient(dto);
         if (res.IsSuccess)
         {
-            TempData[SuccessMessage] = res.Message;
+            TempData[SuccessMessage] = BuildFlashMessage(res);
             return RedirectToAction("FilterPatients");
         }
-        TempData[ErrorMessage] = res.Message;
+        TempData[ErrorMessage] = BuildFlashMessage(res);
         return View(dto);
     }
     
@@ -108,10 +110,10 @@ public class PatientController(IUserService userService) : BaseController
         var res = await userService.UpdatePatient(dto);
         if (res.IsSuccess)
         {
-            TempData[SuccessMessage] = res.Message;
+            TempData[SuccessMessage] = BuildFlashMessage(res);
             return RedirectToAction("FilterPatients");
         }
-        TempData[ErrorMessage] = res.Message;
+        TempData[ErrorMessage] = BuildFlashMessage(res);
         return View(dto);
     }
 

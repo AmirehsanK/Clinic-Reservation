@@ -4,10 +4,12 @@ using Clinic.Application.Services.Interfaces;
 using GoogleReCaptcha.V3.Interface;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Clinic.Mvc.Controllers;
 
+[AllowAnonymous]
 public class AccountController(IUserService userService,ICaptchaValidator captchaValidator,IOtpService otpService) : BaseController
 {
     #region Login
@@ -123,7 +125,7 @@ public class AccountController(IUserService userService,ICaptchaValidator captch
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync();
-        TempData[InfoMessage] = "شما با موفقیت از حساب کاربری خود خارج شدید.";
+        TempData[InfoMessage] = "You have been signed out successfully.";
         return RedirectToAction("Login");
     }
 

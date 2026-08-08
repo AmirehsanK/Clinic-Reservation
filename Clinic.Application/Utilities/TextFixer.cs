@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Clinic.Application.Utilities
@@ -123,14 +122,14 @@ namespace Clinic.Application.Utilities
             return text;
         }
 
-        public static string ToTooman(this int price)
+        public static string ToCurrency(this int price)
         {
-            return price > 0 ? price.ToString("#,0 تومان") : "تعیین نشده";
+            return price > 0 ? price.ToString("#,0") + " USD" : "Not specified";
         }
 
         public static string BooleanResult(this bool boolean)
         {
-            return boolean ? "بله" : "خیر";
+            return boolean ? "Yes" : "No";
         }
 
         public static int StringToPrice(this string price)
@@ -144,40 +143,10 @@ namespace Clinic.Application.Utilities
             return $"{megabytes:F2} MB";  // Formats to 2 decimal places
         }
 
-        public static DayOfWeek ConvertToPersianDayOfWeek(this DayOfWeek miladiDayOfWeek)
+        public static string ToUrlDateFormat(this DateTime date)
         {
-            return miladiDayOfWeek switch
-            {
-                DayOfWeek.Saturday => DayOfWeek.Saturday,
-                DayOfWeek.Sunday => DayOfWeek.Sunday,
-                DayOfWeek.Monday => DayOfWeek.Monday,
-                DayOfWeek.Tuesday => DayOfWeek.Tuesday,
-                DayOfWeek.Wednesday => DayOfWeek.Wednesday,
-                DayOfWeek.Thursday => DayOfWeek.Thursday,
-                DayOfWeek.Friday => DayOfWeek.Friday,
-                _ => throw new ArgumentOutOfRangeException()
-            };
-        }
-
-        public static string ToShamsiUrlFormat(this DateTime date)
-        {
-            //Date 06-02-1405 => 1405-02-06
-            var pc = new PersianCalendar();
-            return $"{pc.GetYear(date):0000}-{pc.GetMonth(date):00}-{pc.GetDayOfMonth(date):00}";
-        }
-
-        public static DateTime ConvertShamsiStringToDateTime(this string shamsiDate)
-        {
-            //1405-02-29
-            var parts = shamsiDate.Split('-'); // parts = [1405,02,29]
-
-            var year = int.Parse(parts[0]);
-            var month = int.Parse(parts[1]);
-            var day = int.Parse(parts[2]);
-
-            var pc = new PersianCalendar();
-
-            return pc.ToDateTime(year,month,day,0,0,0,0);
+            //Date 2026-08-08 => 2026-08-08
+            return date.ToString("yyyy-MM-dd");
         }
     }
 }

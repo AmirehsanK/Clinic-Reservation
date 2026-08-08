@@ -1,18 +1,146 @@
-﻿@model Clinic.Application.DTOs.Patients.FilterPatientsDto
-
+﻿@model FilterPatientsDto
 @{
-    Layout = null;
+    ViewData["Title"] = "Patients";
 }
 
-<!DOCTYPE html>
+@section PageActions {
+    <div class="btn-list">
+        <a asp-controller="Patient" asp-action="CreateGroupPatients" class="btn btn-outline-primary">
+            <i class="ti ti-users-plus me-1"></i>
+            Batch Create
+        </a>
+        <a asp-controller="Patient" asp-action="CreatePatient" class="btn btn-primary">
+            <i class="ti ti-plus me-1"></i>
+            New Patient
+        </a>
+    </div>
+}
 
-<html>
-<head>
-    <title>title</title>
-</head>
-<body>
-<div>
-      
+<div class="card mb-3">
+    <div class="card-header">
+        <h3 class="card-title">Filter Patients</h3>
+    </div>
+    <div class="card-body">
+        <form id="filterForm" asp-controller="Patient" asp-action="FilterPatients" method="get">
+            <input type="hidden" asp-for="PageId" id="PageId" />
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label asp-for="FullName" class="form-label">Full Name</label>
+                    <input asp-for="FullName" class="form-control" placeholder="Search by name" />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Mobile" class="form-label">Mobile</label>
+                    <input asp-for="Mobile" class="form-control" placeholder="Search by mobile" />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="NationalId" class="form-label">National ID</label>
+                    <input asp-for="NationalId" class="form-control" placeholder="Search by national ID" />
+                </div>
+                <div class="col-md-1">
+                    <label asp-for="Age" class="form-label">Age</label>
+                    <input asp-for="Age" type="number" min="0" class="form-control" />
+                </div>
+                <div class="col-md-2">
+                    <label asp-for="Gender" class="form-label">Gender</label>
+                    <select asp-for="Gender" class="form-select" asp-items="Html.GetEnumSelectList<FilterGender>()"></select>
+                </div>
+            </div>
+            <div class="form-footer">
+                <button type="submit" class="btn btn-primary">
+                    <i class="ti ti-filter me-1"></i>
+                    Apply Filters
+                </button>
+                <a asp-controller="Patient" asp-action="FilterPatients" class="btn btn-link">
+                    <i class="ti ti-x me-1"></i>
+                    Clear
+                </a>
+            </div>
+        </form>
+    </div>
 </div>
-</body>
-</html>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Patients List</h3>
+        <div class="card-actions">
+            <span class="badge bg-blue-lt">@Model.AllEntitiesCount total</span>
+        </div>
+    </div>
+
+    @if (Model.Data is null || Model.Data.Count == 0)
+    {
+        <div class="empty">
+            <div class="empty-icon"><i class="ti ti-users" style="font-size: 3rem;"></i></div>
+            <p class="empty-title">No patients found</p>
+            <p class="empty-subtitle text-secondary">Try adjusting your filters, or create a new patient.</p>
+            <div class="empty-action">
+                <a asp-controller="Patient" asp-action="CreatePatient" class="btn btn-primary">
+                    <i class="ti ti-plus me-1"></i>
+                    New Patient
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Full Name</th>
+                    <th>Mobile</th>
+                    <th>National ID</th>
+                    <th>Age</th>
+                    <th>Gender</th>
+                    <th class="w-1">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var patient in Model.Data)
+                {
+                    <tr>
+                        <td class="text-secondary">@patient.Id</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <span class="avatar avatar-sm bg-pink-lt me-2"><i class="ti ti-user"></i></span>
+                                @patient.FullName
+                            </div>
+                        </td>
+                        <td class="text-secondary">@patient.Mobile</td>
+                        <td class="text-secondary">@patient.NationalId</td>
+                        <td class="text-secondary">@patient.Age</td>
+                        <td><span class="badge @patient.Gender.ToBadgeClass()">@patient.Gender.GetDisplayName()</span></td>
+                        <td>
+                            <div class="btn-list flex-nowrap">
+                                <a asp-controller="Patient" asp-action="EditPatient" asp-route-id="@patient.Id"
+                                   class="btn btn-outline-primary btn-icon" title="Edit" aria-label="Edit @patient.FullName">
+                                    <i class="ti ti-pencil"></i>
+                                </a>
+                                <a asp-controller="Patient" asp-action="DeletePatient" asp-route-id="@patient.Id"
+                                   class="btn btn-outline-danger btn-icon"
+                                   title="Delete" aria-label="Delete @patient.FullName"
+                                   data-confirm="Are you sure you want to delete patient &quot;@patient.FullName&quot;? This will fail if the patient has existing records.">
+                                    <i class="ti ti-trash"></i>
+                                </a>
+                                <a asp-controller="Patient" asp-action="DeletePatientWithRecords" asp-route-id="@patient.Id"
+                                   class="btn btn-outline-danger btn-icon"
+                                   title="Delete with all records" aria-label="Delete @patient.FullName with records"
+                                   data-confirm="This will permanently delete &quot;@patient.FullName&quot; AND all of their reservation records. Continue?">
+                                    <i class="ti ti-trash-x"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer d-flex align-items-center">
+            <p class="m-0 text-secondary">@Model.GetCurrentPagingStatus()</p>
+            <div class="ms-auto">
+                @await Html.PartialAsync("_Pagination", (BasePaging)Model)
+            </div>
+        </div>
+    }
+</div>

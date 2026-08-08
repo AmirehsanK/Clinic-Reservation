@@ -38,24 +38,24 @@ public class FilterRecordsDto : BasePaging
 }
 public enum FilterRecordStatus
 {
-    [Display(Name = "همه")]
+    [Display(Name = "All")]
     All,
-    [Display(Name = "رزرو شده")]
+    [Display(Name = "Reserved")]
     Reserved,
-    [Display(Name = "لغو شده")]
+    [Display(Name = "Cancelled")]
     Cancelled,
-    [Display(Name = "حضور یافته")]
+    [Display(Name = "Attended")]
     Attended
 }
     
 public enum FilterPaymentType
 {
-    [Display(Name = "همه")]
+    [Display(Name = "All")]
     All,
-    [Display(Name = "نقد")]
+    [Display(Name = "Cash")]
     Cash,
-    [Display(Name = "کارت بانکی")]
+    [Display(Name = "Credit Card")]
     CreditCard,
-    [Display(Name = "پرداخت نشده")]
+    [Display(Name = "Not Paid")]
     NotPaid
 }
