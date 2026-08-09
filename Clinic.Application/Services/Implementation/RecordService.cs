@@ -40,8 +40,10 @@ public class RecordService : IRecordService
                 query = query.Where(p => p.PaymentType == PaymentType.Cash); break;
             case FilterPaymentType.CreditCard:
                 query = query.Where(p => p.PaymentType == PaymentType.CreditCard); break;
+            case FilterPaymentType.NotPaid:
+                query = query.Where(p => p.PaymentType == PaymentType.NotPaid); break;
             default:
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException(nameof(filter), filter.PaymentType, "Unknown payment type filter.");
         }
 
         switch (filter.Status)
@@ -55,7 +57,7 @@ public class RecordService : IRecordService
             case FilterRecordStatus.Attended:
                 query = query.Where(p => p.Status == ReserveStatus.Attended); break;
             default:
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException(nameof(filter), filter.Status, "Unknown record status filter.");
         }
 
         #endregion
@@ -98,6 +100,10 @@ public class RecordService : IRecordService
     public async Task<ReservationRecordDetailDto> GetReservationRecordDetail(int id)
     {
         var data = await _recordRepository.GetEntityById(id);
+        if (data == null)
+        {
+            return null;
+        }
         return new ReservationRecordDetailDto
         {
             Id = data.Id,
@@ -119,6 +125,12 @@ public class RecordService : IRecordService
         #region Validation
 
         var availablity = await _reservationRepository.GetEntityById(dto.ReservationId);
+        if (availablity == null)
+            return new BaseResponse()
+            {
+                IsSuccess = false,
+                Message = "Time slot not found."
+            };
         if (availablity.Reserved)
             return new BaseResponse()
             {
@@ -170,6 +182,10 @@ public class RecordService : IRecordService
     public async Task<EditRecordDto> GetUpdateRecord(int id)
     {
         var data = await _recordRepository.GetEntityById(id);
+        if (data == null)
+        {
+            return null;
+        }
         return new EditRecordDto
         {
             Id = data.Id,
@@ -183,6 +199,14 @@ public class RecordService : IRecordService
     public async Task<BaseResponse> UpdateRecord(EditRecordDto dto)
     {
         var data = await _recordRepository.GetEntityById(dto.Id);
+        if (data == null)
+        {
+            return new BaseResponse
+            {
+                IsSuccess = false,
+                Message = "Record not found."
+            };
+        }
         data.PaymentType = dto.PaymentType;
         data.PaidPrice=dto.PaidPrice;
         data.Description=dto.Description;
@@ -199,7 +223,14 @@ public class RecordService : IRecordService
 
     public async Task<BaseResponse> DeleteRecord(int id)
     {
-        await _recordRepository.Delete(id);
+        if (!await _recordRepository.Delete(id))
+        {
+            return new BaseResponse
+            {
+                IsSuccess = false,
+                Message = "Record not found."
+            };
+        }
         await _recordRepository.SaveChanges();
         return new BaseResponse
         {

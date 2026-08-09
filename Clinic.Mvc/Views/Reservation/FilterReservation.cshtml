@@ -106,11 +106,13 @@
                             </span>
                         </td>
                         <td>
-                            <a asp-controller="Reservation" asp-action="DeleteReservation" asp-route-id="@reservation.Id"
-                               class="btn btn-outline-danger btn-icon" title="Delete" aria-label="Delete time slot @reservation.Id"
-                               data-confirm="Are you sure you want to delete this time slot?">
-                                <i class="ti ti-trash"></i>
-                            </a>
+                            <form asp-controller="Reservation" asp-action="DeleteReservation" asp-route-id="@reservation.Id" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-outline-danger btn-icon"
+                                        title="Delete" aria-label="Delete time slot @reservation.Id"
+                                        data-confirm="Are you sure you want to delete this time slot?">
+                                    <i class="ti ti-trash"></i>
+                                </button>
+                            </form>
                         </td>
                     </tr>
                 }
@@ -142,7 +144,19 @@
             var selectAll = document.getElementById('select-all');
             var deleteBtn = document.getElementById('delete-selected-btn');
             var toastEl = document.getElementById('action-toast');
-            var toast = new bootstrap.Toast(toastEl);
+
+            // Tabler comes from a CDN. Constructing the toast eagerly meant a
+            // failed CDN load threw here and left select-all and the delete
+            // button unbound, so build it lazily and carry on without it.
+            function showResult(title, body) {
+                if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+                    document.getElementById('action-toast-title').textContent = title;
+                    document.getElementById('action-toast-body').textContent = body;
+                    bootstrap.Toast.getOrCreateInstance(toastEl).show();
+                } else {
+                    alert(title + '\n' + body);
+                }
+            }
 
             function checkboxes() {
                 return Array.prototype.slice.call(document.querySelectorAll('.reservation-checkbox'));
@@ -172,13 +186,11 @@
                 }
 
                 tablerPostJson('/delete-group-reservation', ids, function (data) {
-                    document.getElementById('action-toast-title').textContent = data.isSuccess ? 'Success' : 'Error';
                     var body = data.message || '';
                     if (data.items && data.items.length > 0) {
                         body += '\n' + data.items.join('\n');
                     }
-                    document.getElementById('action-toast-body').textContent = body;
-                    toast.show();
+                    showResult(data.isSuccess ? 'Success' : 'Error', body);
                     setTimeout(function () { window.location.reload(); }, 1500);
                 });
             });

@@ -64,12 +64,13 @@
                                    class="btn btn-outline-primary btn-icon" title="Edit" aria-label="Edit @admin.FullName">
                                     <i class="ti ti-pencil"></i>
                                 </a>
-                                <a asp-controller="Admin" asp-action="DeleteAdmin" asp-route-id="@admin.Id"
-                                   class="btn btn-outline-danger btn-icon"
-                                   title="Delete" aria-label="Delete @admin.FullName"
-                                   data-confirm="Are you sure you want to delete admin &quot;@admin.FullName&quot;?">
-                                    <i class="ti ti-trash"></i>
-                                </a>
+                                <form asp-controller="Admin" asp-action="DeleteAdmin" asp-route-id="@admin.Id" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-danger btn-icon"
+                                            title="Delete" aria-label="Delete @admin.FullName"
+                                            data-confirm="Are you sure you want to delete admin &quot;@admin.FullName&quot;?">
+                                        <i class="ti ti-trash"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>

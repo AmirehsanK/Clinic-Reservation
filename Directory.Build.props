@@ -1,0 +1,7 @@
+<Project>
+  <!-- Deliberately empty. MSBuild walks up the directory tree until it finds a
+       Directory.Build.props, and the one in the parent folder belongs to an
+       unrelated solution (net9.0, TreatWarningsAsErrors, Sonar analyzers). This
+       file stops that search so Clinic-Reservation builds with only its own
+       settings. -->
+</Project>

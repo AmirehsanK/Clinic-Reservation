@@ -60,6 +60,10 @@ public class AdminController(IUserService userService) : BaseController
     public async Task<IActionResult> UpdateAdmin(int id)
     {
         var data = await userService.GetUserForUpdate(id);
+        if (data == null)
+        {
+            return NotFound();
+        }
         return View(data);
     }
 
@@ -91,7 +95,7 @@ public class AdminController(IUserService userService) : BaseController
 
     #region Delete Admin User
     
-    [Route("delete-admin/{id}")]
+    [HttpPost("delete-admin/{id}")]
     public async Task<IActionResult> DeleteAdmin(int id)
     {
         var res= await userService.DeleteUser(id);

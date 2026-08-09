@@ -102,7 +102,7 @@ public class ReservationController(IReservationService reservationService) : Bas
 
     #region Delete
 
-    [Route("delete-reservation/{id}")]
+    [HttpPost("delete-reservation/{id}")]
     public async Task<IActionResult> DeleteReservation(int id)
     {
         var res = await reservationService.DeleteReservation(id);

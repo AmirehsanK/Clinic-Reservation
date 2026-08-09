@@ -1,5 +1,4 @@
-﻿using System.Runtime.InteropServices.JavaScript;
-using Clinic.Application.DTOs.Common;
+﻿using Clinic.Application.DTOs.Common;
 using Clinic.Application.DTOs.Paging;
 using Clinic.Application.DTOs.Reservations;
 using Clinic.Application.Services.Interfaces;
@@ -14,7 +13,10 @@ public class ReservationService(IGenericRepository<Reservation> reservationRepos
     
     public async Task<FilterReservationsDto> FilterReservations(FilterReservationsDto filter)
     {
-        var query = reservationRepository.GetAllEntities();
+        // Ordered before paging: Skip/Take over an unordered query gives the
+        // database licence to return rows in any order, so pages could repeat or
+        // omit slots between requests.
+        var query = reservationRepository.GetAllEntities().OrderBy(r => r.ReserveTime).ThenBy(r => r.Id).AsQueryable();
 
         switch (filter.FilterReservationStatus)
         {
@@ -64,18 +66,23 @@ public class ReservationService(IGenericRepository<Reservation> reservationRepos
 
                 #region Validation
 
-                var isAvailable = await reservationRepository.GetAllEntities()
+                var overlapsExisting = await reservationRepository.GetAllEntities()
                     .AnyAsync(p => p.ReserveTime < endDate && p.EndReserveTime > reserveDate);
-                
-                
-                if (isAvailable)
+
+                // Slots queued earlier in this same request are not in the database
+                // yet, so they have to be checked separately - otherwise submitting
+                // two overlapping visit times creates both.
+                var overlapsPending = reservations
+                    .Any(p => p.ReserveTime < endDate && p.EndReserveTime > reserveDate);
+
+                if (overlapsExisting || overlapsPending)
                 {
                     errors.Add($"Date {reserveDate} to {endDate} is already reserved.");
                     continue;
                 }
 
                 #endregion
-                
+
                 reservations.Add(new Reservation
                 {
                     ReserveTime = reserveDate,
@@ -98,10 +105,19 @@ public class ReservationService(IGenericRepository<Reservation> reservationRepos
     {
         #region Validation
 
-        var isAvailable = await reservationRepository.GetAllEntities()
+        if (createReservation.EndReserveTime <= createReservation.ReserveTime)
+        {
+            return new BaseResponse()
+            {
+                IsSuccess = false,
+                Message = "The end time must be after the start time.",
+            };
+        }
+
+        var overlaps = await reservationRepository.GetAllEntities()
             .AnyAsync(p => p.ReserveTime < createReservation.EndReserveTime && p.EndReserveTime > createReservation.ReserveTime);
-        
-        if (isAvailable)
+
+        if (overlaps)
         {
             return new BaseResponse()
             {
@@ -129,15 +145,21 @@ public class ReservationService(IGenericRepository<Reservation> reservationRepos
     
     public async Task ReserveReservation(int reservationId)
     {
-        var data = await reservationRepository.GetEntityById(reservationId);
-        data.Reserved = true;
-        reservationRepository.Update(data);
-        await reservationRepository.SaveChanges();
+        await SetReservedFlag(reservationId, true);
     }
     public async Task CancelReservation(int reservationId)
     {
+        await SetReservedFlag(reservationId, false);
+    }
+
+    private async Task SetReservedFlag(int reservationId, bool reserved)
+    {
         var data = await reservationRepository.GetEntityById(reservationId);
-        data.Reserved = false;
+        if (data == null)
+        {
+            return;
+        }
+        data.Reserved = reserved;
         reservationRepository.Update(data);
         await reservationRepository.SaveChanges();
     }
@@ -157,7 +179,15 @@ public class ReservationService(IGenericRepository<Reservation> reservationRepos
         }
 
         #endregion
-        await reservationRepository.Delete(reservationId);
+
+        if (!await reservationRepository.Delete(reservationId))
+        {
+            return new BaseResponse()
+            {
+                IsSuccess = false,
+                Message = "Time slot not found.",
+            };
+        }
         await reservationRepository.SaveChanges();
         return new BaseResponse()
         {
@@ -177,7 +207,10 @@ public class ReservationService(IGenericRepository<Reservation> reservationRepos
                 errors.Add($"Reservation with ID {reservationId} is in use and cannot be deleted.");
                 continue;
             }
-            await reservationRepository.Delete(reservationId);
+            if (!await reservationRepository.Delete(reservationId))
+            {
+                errors.Add($"Reservation with ID {reservationId} was not found.");
+            }
         }
         await reservationRepository.SaveChanges();
         return new BaseResponse()

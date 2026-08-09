@@ -9,7 +9,10 @@ public class GenericRepository<TEntity> (AppDbContext context,DbSet<TEntity> dbS
     
     public async Task<TEntity> GetEntityById(int id)
     {
-        return await GetAllEntities().SingleAsync(d => d.Id == id);
+        // SingleOrDefault, not Single: an id that does not exist (or has been
+        // soft-deleted) is a normal "not found" for callers to handle, not a
+        // reason to throw and surface a 500.
+        return await GetAllEntities().SingleOrDefaultAsync(d => d.Id == id);
     }
 
     public IQueryable<TEntity> GetAllEntities()
@@ -36,11 +39,16 @@ public class GenericRepository<TEntity> (AppDbContext context,DbSet<TEntity> dbS
         await dbSet.AddRangeAsync(list);
     }
 
-    public async Task Delete(int id)
+    public async Task<bool> Delete(int id)
     {
         var data = await GetEntityById(id);
+        if (data == null)
+        {
+            return false;
+        }
         data.IsDeleted = true;
         Update(data);
+        return true;
     }
 
     public void DeleteRange(List<TEntity> entities)
@@ -61,10 +69,15 @@ public class GenericRepository<TEntity> (AppDbContext context,DbSet<TEntity> dbS
         dbSet.Update(entity);
     }
 
-    public async Task DeletePermanently(int id)
+    public async Task<bool> DeletePermanently(int id)
     {
         var data = await GetEntityById(id);
+        if (data == null)
+        {
+            return false;
+        }
         dbSet.Remove(data);
+        return true;
     }
 
     public async Task SaveChanges()

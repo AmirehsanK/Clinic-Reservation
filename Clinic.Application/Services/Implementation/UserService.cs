@@ -48,6 +48,10 @@ public class UserService : IUserService
     public async Task<UserDetailsDto> GetUserDetailsById(int id)
     {
         var user = await _userRepository.GetEntityById(id);
+        if (user == null)
+        {
+            return null;
+        }
         return new UserDetailsDto
         {
             Id = user.Id,
@@ -59,7 +63,11 @@ public class UserService : IUserService
     }
     public async Task<UserDetailsDto> GetUserDetailsByMobile(string mobile)
     {
-        var user = await _userRepository.GetAllEntities().FirstAsync(u => u.Mobile == mobile);
+        var user = await _userRepository.GetAllEntities().FirstOrDefaultAsync(u => u.Mobile == mobile);
+        if (user == null)
+        {
+            return null;
+        }
         return new UserDetailsDto
         {
             Id = user.Id,
@@ -73,6 +81,10 @@ public class UserService : IUserService
     public async Task<UpdateUserDto> GetUserForUpdate(int id)
     {
         var user = await _userRepository.GetEntityById(id);
+        if (user == null)
+        {
+            return null;
+        }
         return new UpdateUserDto
         {
             Id = id,
@@ -119,6 +131,14 @@ public class UserService : IUserService
             };
         }
         var user = await _userRepository.GetEntityById(updateUsersDto.Id);
+        if (user == null)
+        {
+            return new BaseResponse()
+            {
+                IsSuccess = false,
+                Message = "User not found."
+            };
+        }
         user.FullName = updateUsersDto.FullName;
         user.Mobile = updateUsersDto.Mobile;
         _userRepository.Update(user);
@@ -133,7 +153,14 @@ public class UserService : IUserService
 
     public async Task<BaseResponse> DeleteUser(int id)
     {
-        await _userRepository.Delete(id);
+        if (!await _userRepository.Delete(id))
+        {
+            return new BaseResponse()
+            {
+                IsSuccess = false,
+                Message = "User not found."
+            };
+        }
         await _userRepository.SaveChanges();
         return new BaseResponse()
         {
@@ -217,7 +244,9 @@ public class UserService : IUserService
             FullName = createPatientDto.FullName,
             Mobile = createPatientDto.Mobile,
             Age = createPatientDto.Age,
-            NationalId = createPatientDto.NationalId
+            NationalId = createPatientDto.NationalId,
+            Gender = createPatientDto.Gender,
+            Description = createPatientDto.Description
         };
         await _patientRepository.Create(newPatient);
         await _patientRepository.SaveChanges();
@@ -233,20 +262,38 @@ public class UserService : IUserService
     {
         var patients = new List<Patient>();
         var errors = new List<string>();
+
+        // Pull the existing mobiles/national IDs once instead of two queries per
+        // submitted row, then grow the same sets as rows are accepted so that
+        // duplicates *within* this batch are caught too - checking only against
+        // the database would let two identical rows in one submission through.
+        var submittedMobiles = createGroupPatientsDto.Select(p => p.Mobile).ToList();
+        var submittedNationalIds = createGroupPatientsDto.Select(p => p.NationalId).ToList();
+
+        var takenMobiles = (await _patientRepository.GetAllEntities()
+            .Where(p => submittedMobiles.Contains(p.Mobile))
+            .Select(p => p.Mobile)
+            .ToListAsync()).ToHashSet();
+        var takenNationalIds = (await _patientRepository.GetAllEntities()
+            .Where(p => submittedNationalIds.Contains(p.NationalId))
+            .Select(p => p.NationalId)
+            .ToListAsync()).ToHashSet();
+
         foreach (var item in createGroupPatientsDto)
         {
-            var dupMobile = await _patientRepository.GetAllEntities().AnyAsync(p => p.Mobile == item.Mobile);
-            if (dupMobile)
+            if (takenMobiles.Contains(item.Mobile))
             {
                 errors.Add($"Patient with name {item.FullName} and mobile {item.Mobile} already exists");
                 continue;
             }
-            var dupNationalId = await _patientRepository.GetAllEntities().AnyAsync(p => p.NationalId == item.NationalId);
-            if (dupNationalId)
+            if (takenNationalIds.Contains(item.NationalId))
             {
                 errors.Add($"Patient with name {item.FullName} and national ID {item.NationalId} already exists");
                 continue;
             }
+
+            takenMobiles.Add(item.Mobile);
+            takenNationalIds.Add(item.NationalId);
 
             var patient = new Patient()
             {
@@ -289,6 +336,10 @@ public class UserService : IUserService
     public async Task<UpdatePatientDto> GetPatientForUpdate(int id)
     {
         var patient = await _patientRepository.GetEntityById(id);
+        if (patient == null)
+        {
+            return null;
+        }
         return new UpdatePatientDto()
         {
             Id = patient.Id,
@@ -296,7 +347,8 @@ public class UserService : IUserService
             Mobile = patient.Mobile,
             Age = patient.Age,
             NationalId = patient.NationalId,
-            Gender = patient.Gender
+            Gender = patient.Gender,
+            Description = patient.Description
         };
     }
 
@@ -323,12 +375,21 @@ public class UserService : IUserService
         #endregion
         
         var data = await _patientRepository.GetEntityById(updatePatientDto.Id);
+        if (data == null)
+        {
+            return new BaseResponse()
+            {
+                IsSuccess = false,
+                Message = "Patient not found."
+            };
+        }
         data.FullName = updatePatientDto.FullName;
         data.Mobile = updatePatientDto.Mobile;
         data.Age = updatePatientDto.Age;
         data.NationalId = updatePatientDto.NationalId;
         data.Gender = updatePatientDto.Gender;
-        
+        data.Description = updatePatientDto.Description;
+
         _patientRepository.Update(data);
         await _patientRepository.SaveChanges();
         return new BaseResponse()
@@ -350,7 +411,14 @@ public class UserService : IUserService
                 Message = "Cannot delete patient with existing reservation records."
             };
         }
-        await _patientRepository.Delete(id);
+        if (!await _patientRepository.Delete(id))
+        {
+            return new BaseResponse
+            {
+                IsSuccess = false,
+                Message = "Patient not found."
+            };
+        }
         await _patientRepository.SaveChanges();
         return new BaseResponse
         {
@@ -361,13 +429,20 @@ public class UserService : IUserService
 
     public async Task<BaseResponse> DeletePatientWithRecords(int id)
     {
-        var records = await _reserveRecordRepository.GetAllEntities().Where(r => r.PatientId == id).ToListAsync();
-        foreach (var record in records)
+        var patientExists = await _patientRepository.GetAllEntities().AnyAsync(p => p.Id == id);
+        if (!patientExists)
         {
-            await _reserveRecordRepository.Delete(record.Id);
+            return new BaseResponse
+            {
+                IsSuccess = false,
+                Message = "Patient not found."
+            };
         }
+
+        var records = await _reserveRecordRepository.GetAllEntities().Where(r => r.PatientId == id).ToListAsync();
+        _reserveRecordRepository.DeleteRange(records);
         await _reserveRecordRepository.SaveChanges();
-        
+
         await _patientRepository.Delete(id);
         await _patientRepository.SaveChanges();
         return new BaseResponse
@@ -422,15 +497,16 @@ public class UserService : IUserService
                 IsSuccess = false,
                 Message = "Mobile Number not found."
             };
-        var otpSent = _otpService.ResendOtp(dto.Mobile);
-        if (!otpSent)
+        if (!_otpService.CanSendOtp(dto.Mobile))
             return new BaseResponse
             {
                 IsSuccess = false,
                 Message = "Wait 2 minutes before requesting a new OTP."
             };
         var otp = _otpService.GenerateOtp(dto.Mobile);
-        await _smsService.SendOtp(dto.Mobile, $"Your OTP code is: {otp}");
+        // SendOtp's second argument is the code itself, not a message - the SMS
+        // gateway owns the wording. ResendOtp passes it the same way.
+        await _smsService.SendOtp(dto.Mobile, otp);
         return new BaseResponse
         {
             IsSuccess = true,

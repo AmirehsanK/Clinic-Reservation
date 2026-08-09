@@ -25,6 +25,10 @@ public class RecordController(IRecordService recordService) : BaseController
     public async Task<IActionResult> EditRecord(int id)
     {
         var data = await recordService.GetUpdateRecord(id);
+        if (data == null)
+        {
+            return NotFound();
+        }
         return View(data);
     }
 
@@ -55,7 +59,7 @@ public class RecordController(IRecordService recordService) : BaseController
 
     #region Delete
 
-    [Route("delete-record/{id}")]
+    [HttpPost("delete-record/{id}")]
     public async Task<IActionResult> DeleteRecord(int id)
     {
         var res = await recordService.DeleteRecord(id);

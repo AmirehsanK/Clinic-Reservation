@@ -91,6 +91,10 @@ public class PatientController(IUserService userService) : BaseController
     public async Task<IActionResult> EditPatient(int id)
     {
         var patient = await userService.GetPatientForUpdate(id);
+        if (patient == null)
+        {
+            return NotFound();
+        }
         return View(patient);
     }
     
@@ -121,7 +125,9 @@ public class PatientController(IUserService userService) : BaseController
 
     #region Delete
 
-    [Route("delete-patient/{id}")]
+    // POST, not GET: deleting is not a safe verb, and a GET route means any
+    // <img>/link on another site could delete records for a signed-in admin.
+    [HttpPost("delete-patient/{id}")]
     public async Task<IActionResult> DeletePatient(int id)
     {
         var res = await userService.DeletePatient(id);
@@ -134,7 +140,7 @@ public class PatientController(IUserService userService) : BaseController
         return RedirectToAction("FilterPatients");
     }
 
-    [Route("delete-patient-with-records/{id}")]
+    [HttpPost("delete-patient-with-records/{id}")]
     public async Task<IActionResult> DeletePatientWithRecords(int id)
     {
         var res = await userService.DeletePatientWithRecords(id);

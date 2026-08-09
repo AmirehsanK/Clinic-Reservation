@@ -17,35 +17,70 @@ window.TablerPaging = {
 };
 
 /**
- * Wires up any element with [data-confirm] to show a Tabler confirmation
- * modal before navigating to its href (used for single delete actions).
+ * Reads the page-level antiforgery token rendered by _Layout.
+ */
+function tablerAntiforgeryToken() {
+    var field = document.querySelector('input[name="__RequestVerificationToken"]');
+    return field ? field.value : "";
+}
+
+/**
+ * Upgrades the confirmation step on delete buttons.
+ *
+ * Each delete button lives inside a real POST form carrying its own antiforgery
+ * token, so deleting works with no JavaScript at all. This only intercepts the
+ * submit to ask for confirmation first - via the Tabler modal when Tabler's JS
+ * is available, and via the browser's own confirm() when it is not. A failure
+ * here must never leave the button dead.
  */
 (function () {
     document.addEventListener("DOMContentLoaded", function () {
         var modalEl = document.getElementById("confirm-modal");
-        if (!modalEl) {
-            return;
+        var messageEl = modalEl ? modalEl.querySelector("[data-confirm-message]") : null;
+        var confirmBtn = modalEl ? modalEl.querySelector("[data-confirm-accept]") : null;
+        var pendingForm = null;
+        var modal = null;
+
+        // Tabler is loaded from a CDN; if that request failed, fall back to
+        // confirm() rather than throwing and unbinding every delete button.
+        if (modalEl && typeof bootstrap !== "undefined" && bootstrap.Modal) {
+            modal = new bootstrap.Modal(modalEl);
         }
 
-        var modal = new bootstrap.Modal(modalEl);
-        var messageEl = modalEl.querySelector("[data-confirm-message]");
-        var confirmBtn = modalEl.querySelector("[data-confirm-accept]");
-        var pendingHref = null;
-
         document.querySelectorAll("[data-confirm]").forEach(function (el) {
-            el.addEventListener("click", function (event) {
+            var form = el.closest("form");
+            if (!form) {
+                return;
+            }
+
+            form.addEventListener("submit", function (event) {
+                if (form === pendingForm) {
+                    return; // confirmed already - let it through
+                }
+
+                var message = el.getAttribute("data-confirm");
+
+                if (!modal) {
+                    if (!window.confirm(message)) {
+                        event.preventDefault();
+                    }
+                    return;
+                }
+
                 event.preventDefault();
-                pendingHref = el.getAttribute("href");
-                messageEl.textContent = el.getAttribute("data-confirm");
+                pendingForm = form;
+                messageEl.textContent = message;
                 modal.show();
             });
         });
 
-        confirmBtn.addEventListener("click", function () {
-            if (pendingHref) {
-                window.location.href = pendingHref;
-            }
-        });
+        if (confirmBtn) {
+            confirmBtn.addEventListener("click", function () {
+                if (pendingForm) {
+                    pendingForm.submit();
+                }
+            });
+        }
     });
 })();
 
@@ -56,7 +91,10 @@ window.TablerPaging = {
 function tablerPostJson(url, payload, onDone) {
     fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json",
+            "RequestVerificationToken": tablerAntiforgeryToken()
+        },
         body: JSON.stringify(payload)
     })
         .then(function (response) { return response.json(); })

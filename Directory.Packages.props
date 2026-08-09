@@ -1,0 +1,8 @@
+<Project>
+  <PropertyGroup>
+    <!-- Same reason as Directory.Build.props: shields this solution from the
+         parent folder's Central Package Management, which would forbid the
+         per-project Version attributes used here. -->
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>

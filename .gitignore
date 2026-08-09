@@ -6,3 +6,11 @@ riderModule.iml
 
 # Private Licenses
 sixlabors.lic
+
+# SQLite database produced by the test-only provider
+*.db
+*.db-shm
+*.db-wal
+
+# Runtime log written when the app is started for local testing
+app.log

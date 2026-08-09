@@ -1,7 +1,6 @@
 ﻿using System.Security.Claims;
 using Clinic.Application.DTOs.Users;
 using Clinic.Application.Services.Interfaces;
-using GoogleReCaptcha.V3.Interface;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -9,8 +8,12 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Clinic.Mvc.Controllers;
 
+// NOTE: reCAPTCHA is registered in DI and has a config section, but no site key is
+// set and the sign-in form renders no widget, so there is no token to validate.
+// The validator is not injected here rather than being injected and ignored -
+// wire the widget into Login.cshtml and validate here when keys are configured.
 [AllowAnonymous]
-public class AccountController(IUserService userService,ICaptchaValidator captchaValidator,IOtpService otpService) : BaseController
+public class AccountController(IUserService userService,IOtpService otpService) : BaseController
 {
     #region Login
     
@@ -80,6 +83,11 @@ public class AccountController(IUserService userService,ICaptchaValidator captch
         #region Claims
 
         var user = await userService.GetUserDetailsByMobile(dto.Mobile);
+        if (user == null)
+        {
+            TempData[ErrorMessage] = "Mobile Number not found.";
+            return RedirectToAction("Login");
+        }
         var claims = new List<Claim>()
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -107,13 +115,15 @@ public class AccountController(IUserService userService,ICaptchaValidator captch
     #region Resend OTP
 
     [HttpPost("resend-otp")]
-    public IActionResult ResendOtp(string mobile)
+    public async Task<IActionResult> ResendOtp(string mobile)
     {
-        if(!otpService.ResendOtp(mobile))
+        if(!otpService.CanSendOtp(mobile))
         {
             return Ok(new{message="Code already sent, Wait 2 minutes until try again."});
         }
-        userService.ResendOtp(mobile);
+        // Awaited: previously this returned "sent" before the code had been
+        // generated, and swallowed any failure from the SMS gateway.
+        await userService.ResendOtp(mobile);
         return Ok(new{message="Code sent successfully."});
     }
 

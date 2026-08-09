@@ -117,18 +117,20 @@
                                    class="btn btn-outline-primary btn-icon" title="Edit" aria-label="Edit @patient.FullName">
                                     <i class="ti ti-pencil"></i>
                                 </a>
-                                <a asp-controller="Patient" asp-action="DeletePatient" asp-route-id="@patient.Id"
-                                   class="btn btn-outline-danger btn-icon"
-                                   title="Delete" aria-label="Delete @patient.FullName"
-                                   data-confirm="Are you sure you want to delete patient &quot;@patient.FullName&quot;? This will fail if the patient has existing records.">
-                                    <i class="ti ti-trash"></i>
-                                </a>
-                                <a asp-controller="Patient" asp-action="DeletePatientWithRecords" asp-route-id="@patient.Id"
-                                   class="btn btn-outline-danger btn-icon"
-                                   title="Delete with all records" aria-label="Delete @patient.FullName with records"
-                                   data-confirm="This will permanently delete &quot;@patient.FullName&quot; AND all of their reservation records. Continue?">
-                                    <i class="ti ti-trash-x"></i>
-                                </a>
+                                <form asp-controller="Patient" asp-action="DeletePatient" asp-route-id="@patient.Id" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-danger btn-icon"
+                                            title="Delete" aria-label="Delete @patient.FullName"
+                                            data-confirm="Are you sure you want to delete patient &quot;@patient.FullName&quot;? This will fail if the patient has existing records.">
+                                        <i class="ti ti-trash"></i>
+                                    </button>
+                                </form>
+                                <form asp-controller="Patient" asp-action="DeletePatientWithRecords" asp-route-id="@patient.Id" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-danger btn-icon"
+                                            title="Delete with all records" aria-label="Delete @patient.FullName with records"
+                                            data-confirm="This will permanently delete &quot;@patient.FullName&quot; AND all of their reservation records. Continue?">
+                                        <i class="ti ti-trash-x"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>

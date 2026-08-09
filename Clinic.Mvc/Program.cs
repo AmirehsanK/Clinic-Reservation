@@ -7,20 +7,34 @@ using Clinic.Data.Repositories;
 using GoogleReCaptcha.V3;
 using GoogleReCaptcha.V3.Interface;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 #region MVC
 
-builder.Services.AddControllersWithViews();
+// AutoValidateAntiforgeryToken applies antiforgery validation to every unsafe
+// verb (POST/PUT/DELETE) without each action having to opt in. The views already
+// emit __RequestVerificationToken; before this it was never checked.
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+});
+
+// Lets the AJAX group-delete send its token in a header rather than a form field.
+builder.Services.AddAntiforgery(options => options.HeaderName = "RequestVerificationToken");
 
 #endregion
 
 #region Database
 
+// SQL Server unless Database:Provider says otherwise - see DatabaseProvider for
+// the SQLite testing option.
+var dbProvider = builder.Configuration["Database:Provider"] ?? DatabaseProvider.SqlServer;
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    DatabaseProvider.Configure(options, dbProvider, builder.Configuration.GetConnectionString("DefaultConnection")));
 
 #endregion
 
