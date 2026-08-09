@@ -1,44 +1,102 @@
-Clinic Reservation Project developed with the help of a course (Mostly for review purposes).
+# Clinic Reservation
 
-## Running the app
+A clinic appointment management system built with ASP.NET Core MVC. Staff sign in
+with a one-time code sent to their mobile, then manage patients, publish bookable
+time slots, and keep records of who attended and what they paid.
 
-The app targets SQL Server. `appsettings.json` points at LocalDB by default:
+## What it does
+
+**Patients** — register patients individually or paste in a batch, search the
+register by name, mobile, national ID, age, gender or notes, edit details, and
+remove patients. A patient with appointment history cannot be deleted by
+accident; removing them and their history is a separate, explicit action.
+
+**Reservations** — publish bookable time slots one at a time, or generate a
+month's worth in one pass by picking the weekdays, the times of day and a visit
+duration. Overlapping slots are rejected, both against existing slots and against
+others in the same submission. Slots already attached to an appointment cannot be
+deleted; free ones can be removed individually or in bulk.
+
+**Records** — every appointment links a patient to a slot and carries a status
+(reserved, attended, cancelled), a payment type (cash, credit card, not paid) and
+an amount. Filter by any of those, by patient, or by free text.
+
+**Admins** — manage the staff accounts that can sign in. Mobile numbers are
+unique.
+
+Nothing is ever hard-deleted. Rows are flagged instead, and a global query filter
+keeps them out of every read path.
+
+## How it is put together
+
+| Project | Responsibility |
+| --- | --- |
+| `Clinic.Data` | EF Core entities, `AppDbContext`, and a generic repository. Owns soft-delete filtering and provider selection. |
+| `Clinic.Application` | Services holding the business rules, the DTOs they exchange, paging helpers and image utilities. Returns a `BaseResponse` carrying success, a message and per-item errors. |
+| `Clinic.Mvc` | Controllers, Razor views (Tabler UI), cookie authentication, and development seeding. |
+| `DropTestDb` | Small console helper that drops the database so a run can start clean. |
+
+Sign-in is passwordless: the user submits a mobile number, the app generates a
+six-digit code, and `ISmsService` delivers it. The shipped implementation writes
+the code to the log so the app is usable without an SMS account — replace it with
+a real gateway for production. Codes are single-use, expire after two minutes,
+and a new one cannot be requested until the previous one lapses.
+
+## Running it
+
+Requires the .NET 8 runtime and SQL Server (LocalDB is fine). The connection
+string lives in `Clinic.Mvc/appsettings.json`:
 
 ```
 Server=(localdb)\mssqllocaldb;Database=ClinicReservationDb;Trusted_Connection=True;MultipleActiveResultSets=true
 ```
 
-`dotnet run --project Clinic.Mvc` creates and seeds the database on first start
-(seeding is Development-only).
+```bash
+dotnet run --project Clinic.Mvc
+```
 
-## Testing without SQL Server
+The database is created on first start. In Development it is also seeded with an
+admin (mobile `09120000000`), 20 patients, and a few weeks of slots and records,
+so there is something to look at immediately. Seeding never runs outside
+Development.
 
-If SQL Server / LocalDB is not installed, the app can run against a single-file
-SQLite database instead. This is a testing convenience only — SQL Server remains
-the default and nothing in `appsettings.json` changes.
+Because there is no real SMS gateway, read the sign-in code from the application
+log — look for a line like `OTP for 09120000000: 123456`.
 
-Select it with two environment variables:
+## Running it without SQL Server
+
+The app can run against a single-file SQLite database instead, which needs no
+server and no install. This is for local testing only; SQL Server stays the
+default and `appsettings.json` is untouched. Two environment variables select it:
 
 ```bash
 Database__Provider=Sqlite
 ConnectionStrings__DefaultConnection="Data Source=clinic-test.db"
 ```
 
-There is also a `Clinic.Mvc (SQLite test)` launch profile that sets both.
+There is a `Clinic.Mvc (SQLite test)` launch profile that sets both, and
+`DropTestDb` reads the same variables so it can reset either database.
 
-`run-tests.ps1` wires up the whole cycle — drop the SQLite file, build, start the
-app, run `full_test.sh` against it, shut down:
+## Tests
+
+`full_test.sh` drives the real HTTP surface — 105 assertions covering every
+controller action, the filters, the duplicate and overlap rules, the soft-delete
+protections, and the antiforgery checks. `run-tests.ps1` wires up the whole
+cycle: drop the database, build, start the app, run the suite, shut down.
 
 ```bash
 pwsh ./run-tests.ps1
 ```
 
-Pass `-SkipBuild` to reuse existing build output. It needs `bash` (Git for
-Windows) for `full_test.sh`.
+Pass `-SkipBuild` to reuse existing build output. It needs `bash` on the machine
+(Git for Windows provides it) to run the suite.
 
-`DropTestDb` reads the same two environment variables, so it can reset either
-database:
+## Notes
 
-```bash
-dotnet run --project DropTestDb
-```
+- Deleting anything is a `POST` guarded by an antiforgery token. The buttons are
+  real forms, so they work whether or not the page's JavaScript loaded.
+- `Directory.Build.props` and `Directory.Packages.props` at the solution root are
+  intentionally near-empty. They stop MSBuild inheriting settings from whatever
+  happens to sit in a parent folder.
+- reCAPTCHA is registered and has a config section, but no site key is set and
+  the sign-in form renders no widget, so it currently validates nothing.
