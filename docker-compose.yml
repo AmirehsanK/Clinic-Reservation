@@ -2,7 +2,7 @@
 #
 #   docker compose up --build
 #
-#   App        http://localhost:8080   (sign in with 09120000000; the code is in `docker compose logs app`)
+#   App        http://localhost:8080   (APP_PORT to change it; sign in with 09120000000; the code is in `docker compose logs app`)
 #   Dashboard  http://localhost:18888  (traces, metrics and logs from the app)
 #
 # The SA password below is a throwaway for this local demo only. Override it
@@ -26,7 +26,7 @@ services:
   app:
     build: .
     ports:
-      - "8080:8080"
+      - "${APP_PORT:-8080}:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__DefaultConnection: "Server=db;Database=ClinicReservationDb;User Id=sa;Password=${MSSQL_SA_PASSWORD:-Clinic_Local_Demo_123};TrustServerCertificate=True;MultipleActiveResultSets=true"
