@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+**/*.db
+**/*.db-shm
+**/*.db-wal
+.git/
+.github/
+.vs/
+.idea/
+Clinic.Tests/
+DropTestDb/
+*.md

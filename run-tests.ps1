@@ -31,8 +31,13 @@ $dbPath = Join-Path $mvcDir 'clinic-test.db'
 $appLog = Join-Path ([System.IO.Path]::GetTempPath()) 'app_full.log'
 
 function Resolve-Tool {
-    param([string]$Name, [string[]]$Fallbacks)
+    param([string]$Name, [string[]]$Fallbacks, [switch]$PreferFallbacks)
 
+    if ($PreferFallbacks) {
+        foreach ($p in $Fallbacks) {
+            if (Test-Path -LiteralPath $p) { return $p }
+        }
+    }
     $cmd = Get-Command $Name -ErrorAction SilentlyContinue
     if ($cmd) { return $cmd.Source }
     foreach ($p in $Fallbacks) {
@@ -42,7 +47,10 @@ function Resolve-Tool {
 }
 
 # Git for Windows puts bash.exe in Git\bin, but only Git\cmd is normally on PATH.
-$bash = Resolve-Tool -Name 'bash' -Fallbacks @(
+# On Windows the Git copies are tried first: the `bash` on PATH is often WSL's
+# launcher, which runs in a separate Linux VM that can neither reach the app on
+# localhost nor read the app log from the Windows temp folder.
+$bash = Resolve-Tool -Name 'bash' -PreferFallbacks:$IsWindows -Fallbacks @(
     'C:\Program Files\Git\bin\bash.exe',
     'C:\Program Files\Git\usr\bin\bash.exe',
     'C:\Program Files (x86)\Git\bin\bash.exe'
@@ -80,7 +88,7 @@ $appEnv = @{
 foreach ($k in $appEnv.Keys) { Set-Item -Path "env:$k" -Value $appEnv[$k] }
 
 $app = Start-Process -FilePath $dotnet `
-    -ArgumentList (Join-Path $mvcDir 'bin\Debug\net8.0\Clinic.Mvc.dll') `
+    -ArgumentList (Join-Path $mvcDir 'bin' 'Debug' 'net10.0' 'Clinic.Mvc.dll') `
     -WorkingDirectory $mvcDir `
     -RedirectStandardOutput $appLog `
     -RedirectStandardError "$appLog.err" `

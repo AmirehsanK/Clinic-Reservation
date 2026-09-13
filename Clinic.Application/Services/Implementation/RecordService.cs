@@ -170,7 +170,25 @@ public class RecordService : IRecordService
         availablity.Reserved = true;
         _reservationRepository.Update(availablity);
 
-        await _recordRepository.SaveChanges();
+        // The record insert and the slot update go out in one SaveChanges, so they
+        // commit or fail together. The "already reserved" check above only catches
+        // the common case; if another request booked the slot between our read and
+        // this write, Reserved is a concurrency token and the update matches no row.
+        try
+        {
+            await _recordRepository.SaveChanges();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            ClinicTelemetry.BookingConflicts.Add(1);
+            return new BaseResponse()
+            {
+                IsSuccess = false,
+                Message = "This time slot is already reserved."
+            };
+        }
+
+        ClinicTelemetry.BookingsCreated.Add(1);
         return new BaseResponse
         {
             Id = reservation.Id,

@@ -7,7 +7,8 @@ namespace Clinic.Mvc;
 /// <summary>
 /// Development-only convenience seeding so the app is usable and demonstrable
 /// immediately after cloning, without requiring manual database access.
-/// Never runs outside the Development environment.
+/// Runs in the Development environment, or when Database:SeedDemoData is true
+/// (the Docker demo). Every step is skipped if its table already has rows.
 /// </summary>
 public static class DbSeeder
 {
