@@ -6,7 +6,7 @@
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
 ![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-enabled-425CC7)
 
-<!-- Demo GIF goes here: record sign-in → create slots → filter records, save as docs/demo.gif -->
+![Sign in with a one-time code, then patients, reservations and records](docs/demo.gif)
 
 A clinic appointment management system built with ASP.NET Core MVC. Staff sign in
 with a one-time code sent to their mobile, then manage patients, publish bookable
